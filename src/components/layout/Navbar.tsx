@@ -1,16 +1,28 @@
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ShoppingCart, Menu, X, Search, Heart, User } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ShoppingCart, Menu, X, Search, Heart, User, LogOut, Settings, LayoutDashboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { useAuth } from '@/context/AuthContext';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const Navbar = () => {
   const { getCartItemCount } = useCart();
+  const { user, isAuthenticated, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const navigate = useNavigate();
   
   const navLinks = [
     { name: 'Home', path: '/' },
@@ -19,6 +31,20 @@ const Navbar = () => {
     { name: 'About', path: '/about' },
     { name: 'Contact', path: '/contact' },
   ];
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
+
+  const userInitials = user?.name
+    ? user.name
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .toUpperCase()
+        .substring(0, 2)
+    : 'U';
 
   return (
     <header className="sticky top-0 z-40 bg-background border-b border-border">
@@ -49,10 +75,45 @@ const Navbar = () => {
             <Button variant="ghost" size="icon" className="hidden md:flex">
               <Heart className="h-5 w-5" />
             </Button>
-
-            <Button variant="ghost" size="icon" className="hidden md:flex">
-              <User className="h-5 w-5" />
-            </Button>
+            
+            {isAuthenticated ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback>{userInitials}</AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    <span>Profile</span>
+                  </DropdownMenuItem>
+                  {user?.role === 'admin' && (
+                    <DropdownMenuItem className="flex items-center gap-2" onClick={() => navigate('/admin')}>
+                      <LayoutDashboard className="h-4 w-4" />
+                      <span>Admin Dashboard</span>
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem className="flex items-center gap-2">
+                    <Settings className="h-4 w-4" />
+                    <span>Settings</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="flex items-center gap-2" onClick={handleLogout}>
+                    <LogOut className="h-4 w-4" />
+                    <span>Logout</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button variant="ghost" size="icon" onClick={() => navigate('/login')} className="hidden md:flex">
+                <User className="h-5 w-5" />
+              </Button>
+            )}
             
             <Link to="/cart" className="relative">
               <Button variant="ghost" size="icon">
@@ -156,16 +217,28 @@ const Navbar = () => {
           </div>
 
           <div className="mt-auto p-4 rounded-md border border-border">
-            <div className="flex justify-between items-center">
-              <Link to="/login" className="font-medium" onClick={() => setIsMenuOpen(false)}>
-                Sign In
-              </Link>
-              <Link to="/register" onClick={() => setIsMenuOpen(false)}>
-                <Button>
-                  Register
+            {isAuthenticated ? (
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="font-medium">{user?.name}</p>
+                  <p className="text-sm text-muted-foreground">{user?.email}</p>
+                </div>
+                <Button onClick={handleLogout}>
+                  Logout
                 </Button>
-              </Link>
-            </div>
+              </div>
+            ) : (
+              <div className="flex justify-between items-center">
+                <Link to="/login" className="font-medium" onClick={() => setIsMenuOpen(false)}>
+                  Sign In
+                </Link>
+                <Link to="/register" onClick={() => setIsMenuOpen(false)}>
+                  <Button>
+                    Register
+                  </Button>
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </div>

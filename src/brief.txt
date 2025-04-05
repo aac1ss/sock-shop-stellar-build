@@ -1,0 +1,113 @@
+
+# The Socks Box - Web Application Requirements
+
+## User Authentication
+- Login & Registration functionality for both admin and customers
+- Authentication using JWT tokens stored in localStorage (for demo)
+- Role-based access control (admin vs customer)
+- Protected routes for admin dashboard
+
+## Backend Integration Requirements (for Spring Boot)
+1. Authentication API endpoints:
+   - POST /api/auth/login - Login endpoint expecting email & password
+   - POST /api/auth/register - Registration endpoint expecting name, email & password
+   - GET /api/auth/user - Get current user details
+
+2. Product Management:
+   - GET /api/products - Get all products
+   - GET /api/products/{id} - Get product by ID
+   - POST /api/products - Create new product (admin only)
+   - PUT /api/products/{id} - Update product (admin only)
+   - DELETE /api/products/{id} - Delete product (admin only)
+
+3. Cart & Order Management:
+   - GET /api/cart - Get user's cart
+   - POST /api/cart - Add item to cart
+   - DELETE /api/cart/{item_id} - Remove item from cart
+   - POST /api/orders - Create new order from cart
+   - GET /api/orders - Get user's orders
+   - GET /api/orders/{id} - Get order details
+   - GET /api/admin/orders - Get all orders (admin only)
+   - PUT /api/admin/orders/{id}/status - Update order status (admin only)
+
+4. Customer Management:
+   - GET /api/admin/customers - Get all customers (admin only)
+   - GET /api/admin/customers/{id} - Get customer by ID (admin only)
+   - PUT /api/admin/customers/{id} - Update customer (admin only)
+
+5. Analytics & Reports:
+   - GET /api/admin/analytics/sales - Get sales data
+   - GET /api/admin/analytics/products - Get product performance data
+   - GET /api/admin/analytics/customers - Get customer acquisition data
+
+## Frontend Components & Features
+
+### Customer-facing Pages:
+1. Home Page - Featured products, categories, promotional sections
+2. Products Page - All products with filtering and sorting
+3. Product Detail Page - Individual product information
+4. Cart Page - View and manage items in cart
+5. Authentication Pages - Login and registration
+
+### Admin Dashboard:
+1. Dashboard Overview - Key metrics, recent orders, sales charts
+2. Products Management - Add, edit, delete products, manage inventory
+3. Orders Management - View and process customer orders
+4. Customers Management - View customer information and history
+5. Analytics - Sales reports, customer insights, product performance
+
+## Security Considerations
+1. JWT token authentication
+2. Role-based access control
+3. Input validation on all forms
+4. Secure API calls with proper error handling
+
+## Data Models
+
+### User
+- id: string
+- email: string
+- name: string
+- role: 'admin' | 'customer'
+- password: string (hashed, stored only on backend)
+
+### Product
+- id: string
+- name: string
+- description: string
+- price: number
+- category: string
+- inventory: number
+- images: string[]
+- featured: boolean
+
+### Order
+- id: string
+- customerName: string
+- customerEmail: string
+- items: OrderItem[]
+- status: 'processing' | 'shipped' | 'completed' | 'canceled'
+- totalAmount: number
+- date: string
+
+### OrderItem
+- productId: string
+- productName: string
+- quantity: number
+- price: number
+
+### Cart
+- userId: string
+- items: CartItem[]
+
+### CartItem
+- productId: string
+- quantity: number
+
+## Notes for Implementation
+- All API routes should return appropriate HTTP status codes and error messages
+- Frontend should handle loading states and error notifications
+- Admin interface should restrict access to admin users only
+- Both dark and light themes should be supported
+- Responsive design is essential for all pages
+- Form validation should be implemented on all input forms
