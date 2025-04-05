@@ -1,15 +1,12 @@
-
 export interface Product {
   id: string;
   name: string;
-  price: number;
   description: string;
+  price: number;
   category: string;
-  imageUrl: string;
+  images: string[];
+  inventory: number;
   featured: boolean;
-  inStock: boolean;
-  colors: string[];
-  sizes: string[];
 }
 
 export interface CartItem {

@@ -6,6 +6,7 @@
 - Authentication using JWT tokens stored in localStorage (for demo)
 - Role-based access control (admin vs customer)
 - Protected routes for admin dashboard
+- Animated step-by-step login and registration forms
 
 ## Backend Integration Requirements (for Spring Boot)
 1. Authentication API endpoints:
@@ -42,12 +43,19 @@
 
 ## Frontend Components & Features
 
+### Design System:
+1. Dark Mode with monochromatic palette (#121212 background)
+2. Light Mode with clean, minimalist aesthetic
+3. Animated transitions and interactive elements
+4. Responsive design for all screen sizes
+
 ### Customer-facing Pages:
 1. Home Page - Featured products, categories, promotional sections
 2. Products Page - All products with filtering and sorting
 3. Product Detail Page - Individual product information
 4. Cart Page - View and manage items in cart
-5. Authentication Pages - Login and registration
+5. Authentication Pages - Animated step-by-step login and registration
+6. Customer Dashboard - Order history, activity tracking
 
 ### Admin Dashboard:
 1. Dashboard Overview - Key metrics, recent orders, sales charts

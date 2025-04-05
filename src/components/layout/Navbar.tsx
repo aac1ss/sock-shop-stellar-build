@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, Menu, X, Search, Heart, User, LogOut, Settings, LayoutDashboard } from 'lucide-react';
+import { ShoppingCart, Menu, X, Heart, User, LogOut, Settings, LayoutDashboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
 import { cn } from '@/lib/utils';
@@ -21,7 +21,6 @@ const Navbar = () => {
   const { getCartItemCount } = useCart();
   const { user, isAuthenticated, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const navigate = useNavigate();
   
   const navLinks = [
@@ -56,18 +55,6 @@ const Navbar = () => {
             <span className="text-xl font-bold">The Socks Box</span>
           </Link>
 
-          {/* Search bar (desktop) */}
-          <div className="hidden md:flex relative flex-grow max-w-md mx-8">
-            <input 
-              type="text" 
-              placeholder="Search products..." 
-              className="w-full py-2 pl-4 pr-10 rounded-full border border-border bg-background focus:outline-none focus:ring-1 focus:ring-primary"
-            />
-            <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 transform -translate-y-1/2">
-              <Search className="h-4 w-4" />
-            </Button>
-          </div>
-
           {/* Action buttons */}
           <div className="flex items-center space-x-3">
             <ThemeToggle />
@@ -88,9 +75,13 @@ const Navbar = () => {
                 <DropdownMenuContent align="end">
                   <DropdownMenuLabel>My Account</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem className="flex items-center gap-2">
+                  <DropdownMenuItem className="flex items-center gap-2" onClick={() => navigate('/customer/dashboard')}>
                     <User className="h-4 w-4" />
-                    <span>Profile</span>
+                    <span>Dashboard</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="flex items-center gap-2" onClick={() => navigate('/customer/orders')}>
+                    <ShoppingCart className="h-4 w-4" />
+                    <span>My Orders</span>
                   </DropdownMenuItem>
                   {user?.role === 'admin' && (
                     <DropdownMenuItem className="flex items-center gap-2" onClick={() => navigate('/admin')}>
@@ -110,8 +101,8 @@ const Navbar = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button variant="ghost" size="icon" onClick={() => navigate('/login')} className="hidden md:flex">
-                <User className="h-5 w-5" />
+              <Button variant="ghost" onClick={() => navigate('/login')}>
+                Login / Sign Up
               </Button>
             )}
             
@@ -152,36 +143,6 @@ const Navbar = () => {
             ))}
           </ul>
         </nav>
-
-        {/* Mobile Search Toggle */}
-        <div className="mt-3 md:hidden">
-          {isSearchOpen ? (
-            <div className="relative">
-              <input 
-                type="text" 
-                placeholder="Search products..." 
-                className="w-full py-2 pl-4 pr-10 rounded-full border border-border bg-background focus:outline-none focus:ring-1"
-              />
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="absolute right-1 top-1/2 transform -translate-y-1/2"
-                onClick={() => setIsSearchOpen(false)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          ) : (
-            <Button 
-              variant="outline" 
-              className="w-full flex justify-between items-center"
-              onClick={() => setIsSearchOpen(true)}
-            >
-              <span className="text-muted-foreground">Search products...</span>
-              <Search className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
       </div>
 
       {/* Mobile Menu */}

@@ -25,6 +25,10 @@ import AdminOrders from "./pages/admin/Orders";
 import AdminCustomers from "./pages/admin/Customers";
 import AdminAnalytics from "./pages/admin/Analytics";
 
+// Customer Dashboard Pages
+import CustomerDashboard from "./pages/customer/Dashboard";
+import OrderHistory from "./pages/customer/OrderHistory";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -75,6 +79,22 @@ const App = () => (
                     <AdminLayout>
                       <AdminAnalytics />
                     </AdminLayout>
+                  </ProtectedRoute>
+                } />
+                
+                {/* Customer Dashboard Routes */}
+                <Route path="/customer/dashboard" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <CustomerDashboard />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/customer/orders" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <OrderHistory />
+                    </Layout>
                   </ProtectedRoute>
                 } />
 
