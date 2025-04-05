@@ -1,3 +1,4 @@
+
 export interface Product {
   id: string;
   name: string;
@@ -7,6 +8,10 @@ export interface Product {
   images: string[];
   inventory: number;
   featured: boolean;
+  imageUrl: string; // Added for backward compatibility
+  colors: string[]; // Added for color selection
+  sizes: string[]; // Added for size selection
+  inStock: boolean; // Added for stock status
 }
 
 export interface CartItem {

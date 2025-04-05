@@ -20,7 +20,7 @@ const CartItem: React.FC<CartItemProps> = ({ item }) => {
     <div className="flex items-center py-4 border-b border-gray-200">
       <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-md">
         <img
-          src={product.imageUrl}
+          src={product.imageUrl || (product.images && product.images[0])}
           alt={product.name}
           className="h-full w-full object-cover object-center"
         />
