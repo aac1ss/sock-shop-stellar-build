@@ -16,6 +16,15 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { 
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from '@/components/ui/navigation-menu';
 
 const Navbar = () => {
   const { getCartItemCount } = useCart();
@@ -23,14 +32,6 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
   
-  const navLinks = [
-    { name: 'Home', path: '/' },
-    { name: 'Products', path: '/products' },
-    { name: 'Categories', path: '/categories' },
-    { name: 'About', path: '/about' },
-    { name: 'Contact', path: '/contact' },
-  ];
-
   const handleLogout = () => {
     logout();
     navigate('/');
@@ -46,14 +47,103 @@ const Navbar = () => {
     : 'U';
 
   return (
-    <header className="sticky top-0 z-40 bg-background border-b border-border">
+    <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 py-3">
         {/* Top Header with Logo and Actions */}
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center">
-            <span className="text-xl font-bold">The Socks Box</span>
+            <div className="relative h-10 w-auto overflow-hidden rounded-md bg-primary/10 p-1">
+              {/* Replace with actual logo image */}
+              <div className="flex h-full items-center justify-center px-3 font-bold text-primary">
+                THE SOCKS BOX
+              </div>
+            </div>
           </Link>
+
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex">
+            <NavigationMenu className="mx-auto">
+              <NavigationMenuList>
+                <NavigationMenuItem>
+                  <Link to="/" className={navigationMenuTriggerStyle()}>
+                    Home
+                  </Link>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger>Shop</NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+                      <li className="row-span-3">
+                        <NavigationMenuLink asChild>
+                          <Link
+                            to="/products"
+                            className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md"
+                          >
+                            <div className="mb-2 mt-4 text-lg font-medium">
+                              Products
+                            </div>
+                            <p className="text-sm leading-tight text-muted-foreground">
+                              Browse our full collection of premium socks
+                            </p>
+                          </Link>
+                        </NavigationMenuLink>
+                      </li>
+                      <li>
+                        <NavigationMenuLink asChild>
+                          <Link
+                            to="/categories"
+                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                          >
+                            <div className="text-sm font-medium leading-none">Categories</div>
+                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                              Shop by collection or style
+                            </p>
+                          </Link>
+                        </NavigationMenuLink>
+                      </li>
+                      <li>
+                        <NavigationMenuLink asChild>
+                          <Link
+                            to="/products?featured=true"
+                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                          >
+                            <div className="text-sm font-medium leading-none">Featured</div>
+                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                              Our best selling and trending items
+                            </p>
+                          </Link>
+                        </NavigationMenuLink>
+                      </li>
+                      <li>
+                        <NavigationMenuLink asChild>
+                          <Link
+                            to="/products?new=true"
+                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                          >
+                            <div className="text-sm font-medium leading-none">New Arrivals</div>
+                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                              Just landed in our store
+                            </p>
+                          </Link>
+                        </NavigationMenuLink>
+                      </li>
+                    </ul>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <Link to="/about" className={navigationMenuTriggerStyle()}>
+                    About
+                  </Link>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <Link to="/contact" className={navigationMenuTriggerStyle()}>
+                    Contact
+                  </Link>
+                </NavigationMenuItem>
+              </NavigationMenuList>
+            </NavigationMenu>
+          </div>
 
           {/* Action buttons */}
           <div className="flex items-center space-x-3">
@@ -66,13 +156,14 @@ const Navbar = () => {
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
+                  <Button variant="ghost" size="icon" className="relative h-8 w-8 rounded-full">
                     <Avatar className="h-8 w-8">
-                      <AvatarFallback>{userInitials}</AvatarFallback>
+                      <AvatarImage src={user?.image} alt={user?.name || ''} />
+                      <AvatarFallback className="text-xs">{userInitials}</AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>My Account</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem className="flex items-center gap-2" onClick={() => navigate('/customer/dashboard')}>
@@ -127,32 +218,16 @@ const Navbar = () => {
             </Button>
           </div>
         </div>
-
-        {/* Bottom header with navigation (desktop) */}
-        <nav className="hidden md:flex justify-center mt-2">
-          <ul className="flex space-x-8">
-            {navLinks.map((link) => (
-              <li key={link.name}>
-                <Link
-                  to={link.path}
-                  className="py-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
-                >
-                  {link.name}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
       </div>
 
       {/* Mobile Menu */}
       <div 
         className={cn(
-          "fixed inset-0 bg-background z-50 md:hidden transition-transform duration-300 transform", 
+          "fixed inset-0 bg-background/95 backdrop-blur-sm z-50 md:hidden transition-transform duration-300 transform", 
           isMenuOpen ? "translate-x-0" : "translate-x-full"
         )}
       >
-        <div className="flex flex-col h-full p-4">
+        <div className="flex flex-col h-full p-6">
           <div className="flex justify-between items-center mb-8">
             <span className="text-xl font-bold">The Socks Box</span>
             <Button 
@@ -165,16 +240,41 @@ const Navbar = () => {
           </div>
 
           <div className="space-y-6">
-            {navLinks.map((link) => (
-              <Link
-                key={link.name}
-                to={link.path}
-                className="block text-lg font-medium hover:text-primary transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {link.name}
-              </Link>
-            ))}
+            <Link
+              to="/"
+              className="block text-lg font-medium hover:text-primary transition-colors"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Home
+            </Link>
+            <Link
+              to="/products"
+              className="block text-lg font-medium hover:text-primary transition-colors"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Products
+            </Link>
+            <Link
+              to="/categories"
+              className="block text-lg font-medium hover:text-primary transition-colors"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Categories
+            </Link>
+            <Link
+              to="/about"
+              className="block text-lg font-medium hover:text-primary transition-colors"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              About
+            </Link>
+            <Link
+              to="/contact"
+              className="block text-lg font-medium hover:text-primary transition-colors"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Contact
+            </Link>
           </div>
 
           <div className="mt-auto p-4 rounded-md border border-border">

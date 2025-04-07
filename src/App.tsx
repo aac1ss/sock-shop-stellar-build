@@ -24,6 +24,9 @@ import AdminProducts from "./pages/admin/Products";
 import AdminOrders from "./pages/admin/Orders";
 import AdminCustomers from "./pages/admin/Customers";
 import AdminAnalytics from "./pages/admin/Analytics";
+import Categories from "./pages/Categories";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
 
 // Customer Dashboard Pages
 import CustomerDashboard from "./pages/customer/Dashboard";
@@ -117,6 +120,21 @@ const App = () => (
                 <Route path="/cart" element={
                   <Layout>
                     <Cart />
+                  </Layout>
+                } />
+                <Route path="/categories" element={
+                  <Layout>
+                    <Categories />
+                  </Layout>
+                } />
+                <Route path="/about" element={
+                  <Layout>
+                    <About />
+                  </Layout>
+                } />
+                <Route path="/contact" element={
+                  <Layout>
+                    <Contact />
                   </Layout>
                 } />
                 

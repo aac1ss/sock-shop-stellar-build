@@ -132,4 +132,81 @@
   .card-hover:hover {
     @apply shadow-lg transform -translate-y-1;
   }
+
+  /* Image loading effects */
+  .image-fade-in {
+    @apply opacity-0 transition-opacity duration-700;
+  }
+  
+  .image-loaded {
+    @apply opacity-100;
+  }
+
+  /* Animation utilities */
+  .animate-up {
+    @apply transition-all duration-300 transform hover:-translate-y-1;
+  }
+  
+  .animate-scale {
+    @apply transition-all duration-300 transform hover:scale-105;
+  }
+
+  /* Glass effect */
+  .glass-effect {
+    @apply backdrop-blur-sm bg-background/80;
+  }
+  
+  /* Gradient backgrounds */
+  .bg-gradient-primary {
+    @apply bg-gradient-to-r from-accent/80 to-accent;
+  }
+  
+  /* Link hover effects */
+  .link-underline {
+    @apply relative;
+  }
+  
+  .link-underline:after {
+    @apply absolute content-[''] bg-primary h-[2px] w-0 left-0 bottom-[-2px] transition-all duration-300;
+  }
+  
+  .link-underline:hover:after {
+    @apply w-full;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  /* Improved form inputs for dark mode */
+  .dark input, .dark textarea, .dark select {
+    @apply bg-card border-input text-foreground;
+  }
+  
+  /* Custom button styles */
+  .btn-primary {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90;
+  }
+  
+  .btn-outline {
+    @apply border border-input bg-background hover:bg-accent hover:text-accent-foreground;
+  }
+  
+  /* Custom card styles */
+  .card-premium {
+    @apply border-0 bg-gradient-to-br from-background to-muted shadow-md;
+  }
+  
+  /* Custom image container */
+  .image-container {
+    @apply overflow-hidden rounded-md relative;
+  }
+  
+  /* Premium product badge */
+  .premium-badge {
+    @apply absolute top-2 right-2 bg-accent text-accent-foreground text-xs px-2 py-1 rounded-full;
+  }
 }

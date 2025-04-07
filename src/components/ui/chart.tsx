@@ -16,9 +16,9 @@ import {
 interface ChartProps {
   data: any[];
   height?: number | string;
-  xAxisKey?: string; // Added to support the xAxisKey prop
-  showLegend?: boolean; // Added to support showing/hiding legend
-  series?: { dataKey: string; label: string; color: string }[]; // Added for custom series config
+  xAxisKey?: string;
+  showLegend?: boolean;
+  series?: { dataKey: string; label: string; color: string }[];
 }
 
 export const BarChart = ({ 
