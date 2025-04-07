@@ -12,6 +12,7 @@ export interface Product {
   colors: string[]; // For color selection
   sizes: string[]; // For size selection
   inStock: boolean; // For stock status
+  brandId?: string; // Reference to the brand
 }
 
 export interface CartItem {
@@ -26,6 +27,15 @@ export interface Category {
   name: string;
   description: string;
   imageUrl: string;
+}
+
+// Add Brand interface for brand representation
+export interface Brand {
+  id: string;
+  name: string;
+  description: string;
+  logo: string;
+  featured: boolean;
 }
 
 // Add user interface for better type checking

@@ -1,4 +1,3 @@
-
 import { Product, Category } from "../types";
 
 export const products: Product[] = [
@@ -14,7 +13,8 @@ export const products: Product[] = [
     inventory: 100,
     inStock: true,
     colors: ["red", "blue", "gray"],
-    sizes: ["S", "M", "L"]
+    sizes: ["S", "M", "L"],
+    brandId: "brand5"
   },
   {
     id: "2",
@@ -28,7 +28,8 @@ export const products: Product[] = [
     inventory: 85,
     inStock: true,
     colors: ["white", "black", "blue"],
-    sizes: ["S", "M", "L"]
+    sizes: ["S", "M", "L"],
+    brandId: "brand1"
   },
   {
     id: "3",
@@ -42,7 +43,8 @@ export const products: Product[] = [
     inventory: 120,
     inStock: true,
     colors: ["multi"],
-    sizes: ["S", "M", "L"]
+    sizes: ["S", "M", "L"],
+    brandId: "brand2"
   },
   {
     id: "4",
@@ -56,7 +58,8 @@ export const products: Product[] = [
     inventory: 75,
     inStock: true,
     colors: ["black", "navy", "gray"],
-    sizes: ["S", "M", "L"]
+    sizes: ["S", "M", "L"],
+    brandId: "brand3"
   },
   {
     id: "5",
@@ -70,7 +73,8 @@ export const products: Product[] = [
     inventory: 90,
     inStock: true,
     colors: ["white", "black", "beige"],
-    sizes: ["S", "M", "L"]
+    sizes: ["S", "M", "L"],
+    brandId: "brand4"
   },
   {
     id: "6",
@@ -84,7 +88,8 @@ export const products: Product[] = [
     inventory: 50,
     inStock: true,
     colors: ["pink", "blue", "purple"],
-    sizes: ["S", "M", "L"]
+    sizes: ["S", "M", "L"],
+    brandId: "brand6"
   }
 ];
 

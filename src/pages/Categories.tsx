@@ -3,46 +3,10 @@ import React, { useState, useEffect } from 'react';
 import { Category } from '@/types';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { categories } from '@/data/products';
 
 const Categories = () => {
-  const [categories, setCategories] = useState<Category[]>([
-    {
-      id: "cat1",
-      name: "Athletic Socks",
-      description: "Designed for sports and high-intensity activities with moisture-wicking technology.",
-      imageUrl: "https://images.unsplash.com/photo-1515955656352-a1fa3ffcd111?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80"
-    },
-    {
-      id: "cat2",
-      name: "Dress Socks",
-      description: "Elegant and refined socks for formal occasions and business attire.",
-      imageUrl: "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1160&q=80"
-    },
-    {
-      id: "cat3",
-      name: "Casual Socks",
-      description: "Comfortable everyday socks in various colors and patterns.",
-      imageUrl: "https://images.unsplash.com/photo-1589902860314-e910697faea4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1074&q=80"
-    },
-    {
-      id: "cat4",
-      name: "Novelty Socks",
-      description: "Fun and unique designs for expressing your personality.",
-      imageUrl: "https://images.unsplash.com/photo-1616531770192-6eaea74c2815?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80"
-    },
-    {
-      id: "cat5",
-      name: "Compression Socks",
-      description: "Support socks that improve circulation and reduce fatigue.",
-      imageUrl: "https://images.unsplash.com/photo-1605518216938-7c31b7b14ad0?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1169&q=80"
-    },
-    {
-      id: "cat6",
-      name: "Winter Socks",
-      description: "Warm and cozy socks for cold weather.",
-      imageUrl: "https://images.unsplash.com/photo-1583086762675-5a88bcc12241?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1072&q=80"
-    }
-  ]);
+  const [allCategories, setAllCategories] = useState<Category[]>(categories);
   
   const navigate = useNavigate();
   
@@ -76,7 +40,7 @@ const Categories = () => {
         initial="hidden"
         animate="show"
       >
-        {categories.map((category) => (
+        {allCategories.map((category) => (
           <motion.div
             key={category.id}
             className="group cursor-pointer" 

@@ -24,7 +24,9 @@ import AdminProducts from "./pages/admin/Products";
 import AdminOrders from "./pages/admin/Orders";
 import AdminCustomers from "./pages/admin/Customers";
 import AdminAnalytics from "./pages/admin/Analytics";
+import AdminBrands from "./pages/admin/Brands";
 import Categories from "./pages/Categories";
+import Brands from "./pages/Brands";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 
@@ -84,6 +86,13 @@ const App = () => (
                     </AdminLayout>
                   </ProtectedRoute>
                 } />
+                <Route path="/admin/brands" element={
+                  <ProtectedRoute allowedRole="admin">
+                    <AdminLayout>
+                      <AdminBrands />
+                    </AdminLayout>
+                  </ProtectedRoute>
+                } />
                 
                 {/* Customer Dashboard Routes */}
                 <Route path="/customer/dashboard" element={
@@ -125,6 +134,11 @@ const App = () => (
                 <Route path="/categories" element={
                   <Layout>
                     <Categories />
+                  </Layout>
+                } />
+                <Route path="/brands" element={
+                  <Layout>
+                    <Brands />
                   </Layout>
                 } />
                 <Route path="/about" element={

@@ -11,7 +11,8 @@ import {
   LogOut, 
   Menu, 
   X,
-  Bell
+  Bell,
+  Store
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -52,6 +53,11 @@ const mainNavigationItems = [
     name: 'Customers',
     path: '/admin/customers',
     icon: Users
+  },
+  {
+    name: 'Brands',
+    path: '/admin/brands',
+    icon: Store
   },
   {
     name: 'Analytics',
