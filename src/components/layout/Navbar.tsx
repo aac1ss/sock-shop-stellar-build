@@ -46,6 +46,11 @@ const Navbar = () => {
         .substring(0, 2)
     : 'U';
 
+  // Function to close mobile menu
+  const closeMobileMenu = () => {
+    setIsMenuOpen(false);
+  };
+
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 py-3">
@@ -53,11 +58,12 @@ const Navbar = () => {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center">
-            <div className="relative h-10 w-auto overflow-hidden rounded-md bg-primary/10 p-1">
-              {/* Replace with actual logo image */}
-              <div className="flex h-full items-center justify-center px-3 font-bold text-primary">
-                THE SOCKS BOX
-              </div>
+            <div className="h-10 w-auto overflow-hidden">
+              <img 
+                src="/images/logo/logo.png" 
+                alt="The Socks Box" 
+                className="h-full w-auto object-contain" 
+              />
             </div>
           </Link>
 
@@ -66,12 +72,12 @@ const Navbar = () => {
             <NavigationMenu className="mx-auto">
               <NavigationMenuList>
                 <NavigationMenuItem>
-                  <Link to="/" className={navigationMenuTriggerStyle()}>
+                  <Link to="/" className="text-foreground px-4 py-2 hover:text-primary transition-colors">
                     Home
                   </Link>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger>Shop</NavigationMenuTrigger>
+                  <NavigationMenuTrigger className="bg-transparent hover:bg-transparent hover:text-primary">Shop</NavigationMenuTrigger>
                   <NavigationMenuContent>
                     <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
                       <li className="row-span-3">
@@ -132,12 +138,12 @@ const Navbar = () => {
                   </NavigationMenuContent>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
-                  <Link to="/about" className={navigationMenuTriggerStyle()}>
+                  <Link to="/about" className="text-foreground px-4 py-2 hover:text-primary transition-colors">
                     About
                   </Link>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
-                  <Link to="/contact" className={navigationMenuTriggerStyle()}>
+                  <Link to="/contact" className="text-foreground px-4 py-2 hover:text-primary transition-colors">
                     Contact
                   </Link>
                 </NavigationMenuItem>
@@ -191,9 +197,9 @@ const Navbar = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button variant="ghost" onClick={() => navigate('/login')}>
+              <Link to="/login" className="hidden md:block text-foreground hover:text-primary transition-colors">
                 Login / Sign Up
-              </Button>
+              </Link>
             )}
             
             <Link to="/cart" className="relative">
@@ -212,6 +218,7 @@ const Navbar = () => {
               size="icon" 
               className="md:hidden"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
+              aria-label={isMenuOpen ? "Close menu" : "Open menu"}
             >
               {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
@@ -228,11 +235,18 @@ const Navbar = () => {
       >
         <div className="flex flex-col h-full p-6">
           <div className="flex justify-between items-center mb-8">
-            <span className="text-xl font-bold">The Socks Box</span>
+            <div className="h-8 w-auto">
+              <img 
+                src="/images/logo/logo.png" 
+                alt="The Socks Box" 
+                className="h-full w-auto object-contain" 
+              />
+            </div>
             <Button 
               variant="ghost" 
               size="icon"
-              onClick={() => setIsMenuOpen(false)}
+              onClick={closeMobileMenu}
+              aria-label="Close menu"
             >
               <X className="h-5 w-5" />
             </Button>
@@ -242,35 +256,35 @@ const Navbar = () => {
             <Link
               to="/"
               className="block text-lg font-medium hover:text-primary transition-colors"
-              onClick={() => setIsMenuOpen(false)}
+              onClick={closeMobileMenu}
             >
               Home
             </Link>
             <Link
               to="/products"
               className="block text-lg font-medium hover:text-primary transition-colors"
-              onClick={() => setIsMenuOpen(false)}
+              onClick={closeMobileMenu}
             >
               Products
             </Link>
             <Link
               to="/categories"
               className="block text-lg font-medium hover:text-primary transition-colors"
-              onClick={() => setIsMenuOpen(false)}
+              onClick={closeMobileMenu}
             >
               Categories
             </Link>
             <Link
               to="/about"
               className="block text-lg font-medium hover:text-primary transition-colors"
-              onClick={() => setIsMenuOpen(false)}
+              onClick={closeMobileMenu}
             >
               About
             </Link>
             <Link
               to="/contact"
               className="block text-lg font-medium hover:text-primary transition-colors"
-              onClick={() => setIsMenuOpen(false)}
+              onClick={closeMobileMenu}
             >
               Contact
             </Link>
@@ -289,10 +303,10 @@ const Navbar = () => {
               </div>
             ) : (
               <div className="flex justify-between items-center">
-                <Link to="/login" className="font-medium" onClick={() => setIsMenuOpen(false)}>
+                <Link to="/login" className="font-medium" onClick={closeMobileMenu}>
                   Sign In
                 </Link>
-                <Link to="/register" onClick={() => setIsMenuOpen(false)}>
+                <Link to="/register" onClick={closeMobileMenu}>
                   <Button>
                     Register
                   </Button>

@@ -1,321 +1,156 @@
 
-import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { useAuth } from "@/context/AuthContext";
-import { Eye, EyeOff, Loader2, User, Mail, LockKeyhole, ArrowLeft, ArrowRight } from "lucide-react";
-import { useTheme } from "@/context/ThemeContext";
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
-import { motion, AnimatePresence } from "framer-motion";
-import { Progress } from "@/components/ui/progress";
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/context/AuthContext';
 
-const formSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  confirmPassword: z.string().min(6, "Password must be at least 6 characters")
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"]
-});
+const formSchema = z
+  .object({
+    name: z.string().min(2, { message: 'Name must be at least 2 characters' }),
+    email: z.string().email({ message: 'Please enter a valid email address' }),
+    password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
 
-type FormValues = z.infer<typeof formSchema>;
+type FormData = z.infer<typeof formSchema>;
 
 const Register = () => {
-  const { register, isLoading } = useAuth();
+  const { register: registerUser } = useAuth();
+  const { toast } = useToast();
   const navigate = useNavigate();
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const { theme } = useTheme();
-  const [step, setStep] = useState(0);
-  
-  const form = useForm<FormValues>({
+  const [isLoading, setIsLoading] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormData>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      password: "",
-      confirmPassword: ""
-    },
-    mode: "onChange"
   });
-  
-  const onSubmit = async (data: FormValues) => {
-    await register(data.name, data.email, data.password);
-    navigate("/");
-  };
-  
-  const handleNext = async () => {
-    let canProceed = false;
-    
-    if (step === 0) {
-      const nameValid = await form.trigger("name");
-      canProceed = nameValid;
-    } else if (step === 1) {
-      const emailValid = await form.trigger("email");
-      canProceed = emailValid;
-    } else if (step === 2) {
-      const passwordValid = await form.trigger("password");
-      canProceed = passwordValid;
-    }
-    
-    if (canProceed) {
-      setStep(prev => prev + 1);
+
+  const onSubmit = async (data: FormData) => {
+    setIsLoading(true);
+    try {
+      await registerUser(data.name, data.email, data.password);
+      navigate('/');
+    } catch (error) {
+      console.error('Registration error:', error);
+      toast({
+        title: 'Registration Failed',
+        description: 'There was a problem creating your account',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
-  
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
-
-  const toggleConfirmPasswordVisibility = () => {
-    setShowConfirmPassword(!showConfirmPassword);
-  };
-
-  // Animation variants
-  const cardVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
-    exit: { opacity: 0, y: -20, transition: { duration: 0.3 } }
-  };
-  
-  useEffect(() => {
-    // Add a class to the body for background effect
-    document.body.classList.add("auth-page");
-    return () => {
-      document.body.classList.remove("auth-page");
-    };
-  }, []);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
-      <div className="absolute top-4 right-4">
-        <ThemeToggle />
-      </div>
-      
-      <div className="w-full max-w-md">
-        <div className="mb-10 text-center">
-          <Link to="/" className="inline-block mb-6">
-            <span className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">The Socks Box</span>
-          </Link>
-          <h1 className="text-2xl font-semibold mb-1">Create an account</h1>
-          <p className="text-muted-foreground">Join us and start shopping today</p>
-        </div>
-        
-        <Card className="border-2 shadow-lg overflow-hidden">
-          <CardHeader className="space-y-1">
-            <div className="flex justify-between items-center">
-              <CardTitle className="text-xl">
-                {step === 0 && "Personal Information"}
-                {step === 1 && "Email Address"}
-                {step === 2 && "Create Password"}
-                {step === 3 && "Confirm Password"}
-              </CardTitle>
-              <div className="text-sm text-muted-foreground">
-                Step {step + 1} of 4
-              </div>
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+      <Card className="w-full max-w-md relative">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute right-2 top-2"
+          onClick={() => navigate('/')}
+          aria-label="Close"
+        >
+          <X className="h-4 w-4" />
+        </Button>
+        <CardHeader>
+          <div className="flex justify-center mb-6">
+            <img 
+              src="/images/logo/logo.png" 
+              alt="The Socks Box" 
+              className="h-10" 
+            />
+          </div>
+          <CardTitle className="text-2xl text-center">Create Account</CardTitle>
+          <CardDescription className="text-center">
+            Enter your information to create an account
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Full Name</Label>
+              <Input
+                id="name"
+                type="text"
+                placeholder="John Doe"
+                {...register('name')}
+              />
+              {errors.name && (
+                <p className="text-sm text-destructive">{errors.name.message}</p>
+              )}
             </div>
-            <Progress value={(step + 1) * 25} className="h-1" />
-          </CardHeader>
-          <CardContent>
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={step}
-                variants={cardVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-              >
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                    {step === 0 && (
-                      <FormField
-                        control={form.control}
-                        name="name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <CardDescription className="mb-3">
-                              Please enter your full name
-                            </CardDescription>
-                            <div className="relative">
-                              <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                              <FormControl>
-                                <Input 
-                                  placeholder="John Doe" 
-                                  {...field}
-                                  autoComplete="name"
-                                  className="pl-10"
-                                />
-                              </FormControl>
-                            </div>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    )}
-                    
-                    {step === 1 && (
-                      <FormField
-                        control={form.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <CardDescription className="mb-3">
-                              Enter an email address you'd like to use
-                            </CardDescription>
-                            <div className="relative">
-                              <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                              <FormControl>
-                                <Input 
-                                  placeholder="email@example.com" 
-                                  type="email"
-                                  {...field}
-                                  autoComplete="email"
-                                  className="pl-10"
-                                />
-                              </FormControl>
-                            </div>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    )}
-                    
-                    {step === 2 && (
-                      <FormField
-                        control={form.control}
-                        name="password"
-                        render={({ field }) => (
-                          <FormItem>
-                            <CardDescription className="mb-3">
-                              Create a strong password for your account
-                            </CardDescription>
-                            <div className="relative">
-                              <LockKeyhole className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                              <FormControl>
-                                <Input 
-                                  type={showPassword ? "text" : "password"}
-                                  placeholder="••••••••" 
-                                  {...field}
-                                  autoComplete="new-password"
-                                  className="pl-10 pr-10"
-                                />
-                              </FormControl>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                onClick={togglePasswordVisibility}
-                                className="absolute right-0 top-0 h-full"
-                              >
-                                {showPassword ? (
-                                  <EyeOff className="h-4 w-4" />
-                                ) : (
-                                  <Eye className="h-4 w-4" />
-                                )}
-                              </Button>
-                            </div>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    )}
-                    
-                    {step === 3 && (
-                      <FormField
-                        control={form.control}
-                        name="confirmPassword"
-                        render={({ field }) => (
-                          <FormItem>
-                            <CardDescription className="mb-3">
-                              Confirm your password to continue
-                            </CardDescription>
-                            <div className="relative">
-                              <LockKeyhole className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                              <FormControl>
-                                <Input 
-                                  type={showConfirmPassword ? "text" : "password"}
-                                  placeholder="••••••••" 
-                                  {...field}
-                                  autoComplete="new-password"
-                                  className="pl-10 pr-10"
-                                />
-                              </FormControl>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                onClick={toggleConfirmPasswordVisibility}
-                                className="absolute right-0 top-0 h-full"
-                              >
-                                {showConfirmPassword ? (
-                                  <EyeOff className="h-4 w-4" />
-                                ) : (
-                                  <Eye className="h-4 w-4" />
-                                )}
-                              </Button>
-                            </div>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    )}
-                    
-                    <div className="flex justify-between mt-6">
-                      <Button 
-                        type="button" 
-                        variant="ghost"
-                        onClick={() => setStep(prev => prev - 1)}
-                        disabled={step === 0}
-                        className={step === 0 ? 'opacity-0 cursor-default' : ''}
-                      >
-                        <ArrowLeft className="mr-2 h-4 w-4" />
-                        Back
-                      </Button>
-                      
-                      {step < 3 ? (
-                        <Button 
-                          type="button" 
-                          onClick={handleNext}
-                        >
-                          Next
-                          <ArrowRight className="ml-2 h-4 w-4" />
-                        </Button>
-                      ) : (
-                        <Button 
-                          type="submit"
-                          disabled={isLoading}
-                        >
-                          {isLoading ? (
-                            <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Creating account
-                            </>
-                          ) : "Create Account"}
-                        </Button>
-                      )}
-                    </div>
-                  </form>
-                </Form>
-              </motion.div>
-            </AnimatePresence>
-          </CardContent>
-          <CardFooter className="flex justify-center border-t pt-4">
-            <div className="text-sm text-center text-muted-foreground">
-              <span>Already have an account? </span>
-              <Link to="/login" className="text-primary hover:underline font-medium">
-                Sign In
-              </Link>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="name@example.com"
+                {...register('email')}
+              />
+              {errors.email && (
+                <p className="text-sm text-destructive">{errors.email.message}</p>
+              )}
             </div>
-          </CardFooter>
-        </Card>
-      </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                {...register('password')}
+              />
+              {errors.password && (
+                <p className="text-sm text-destructive">{errors.password.message}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                {...register('confirmPassword')}
+              />
+              {errors.confirmPassword && (
+                <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>
+              )}
+            </div>
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? 'Creating account...' : 'Register'}
+            </Button>
+          </form>
+        </CardContent>
+        <CardFooter className="flex flex-col space-y-4">
+          <div className="text-center text-sm">
+            Already have an account?{' '}
+            <Link to="/login" className="text-primary hover:underline">
+              Log in
+            </Link>
+          </div>
+        </CardFooter>
+      </Card>
     </div>
   );
 };
