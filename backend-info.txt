@@ -1,0 +1,307 @@
+
+# The Socks Box Backend Documentation
+
+## Architecture Overview
+
+The backend is built using Spring Boot with a layered architecture:
+- Controllers: Handle HTTP requests and route them to appropriate services
+- Services: Contain business logic and orchestrate operations
+- Repositories: Interface with the database using JPA
+- Entities: Represent database tables
+- DTOs: Data Transfer Objects for request/response payloads
+
+## Security Implementation
+
+- JWT (JSON Web Token) based authentication
+- BCrypt password encryption
+- Role-based access control (ADMIN, CUSTOMER)
+- Secured endpoints with Spring Security
+- Token validation and refresh mechanisms
+
+## Core Components
+
+1. User Management
+   - Registration with automatic cart creation
+   - Login with JWT token generation
+   - Role-based authorization
+   - Profile management
+
+2. Product Management
+   - CRUD operations for products
+   - Category and brand associations
+   - Inventory tracking
+   - Featured products handling
+   - Image management
+
+3. Cart System
+   - Automatic cart creation for new users
+   - Add/remove/update cart items
+   - Stock validation
+   - Price calculation
+
+4. Order Processing
+   - Order creation from cart
+   - Order status management
+   - Inventory updates
+   - Order history tracking
+
+5. Category & Brand Management
+   - CRUD operations
+   - Association with products
+   - Featured brands handling
+
+6. Analytics (Admin)
+   - Sales data
+   - Customer metrics
+   - Product performance
+   - Inventory tracking
+
+## Database Structure
+
+1. Users Table
+   - Basic user information
+   - Authentication details
+   - Role information
+
+2. Products Table
+   - Product details
+   - Inventory tracking
+   - Category and brand relationships
+   - Images and variants
+
+3. Categories & Brands Tables
+   - Basic information
+   - Product associations
+
+4. Cart & Cart Items Tables
+   - User association
+   - Product references
+   - Quantity tracking
+
+5. Orders & Order Items Tables
+   - Order details
+   - Customer information
+   - Product references
+   - Status tracking
+
+## API Testing Guide - CURL Commands
+
+1. Authentication APIs:
+
+```bash
+# Register a new user
+curl -X POST http://localhost:8080/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Test User",
+    "email": "test@example.com",
+    "password": "password123"
+  }'
+
+# Login
+curl -X POST http://localhost:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "test@example.com",
+    "password": "password123"
+  }'
+
+# Get current user
+curl -X GET http://localhost:8080/api/auth/user \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+2. Product APIs:
+
+```bash
+# Get all products
+curl -X GET http://localhost:8080/api/products
+
+# Get product by ID
+curl -X GET http://localhost:8080/api/products/1
+
+# Create product (Admin only)
+curl -X POST http://localhost:8080/api/products \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Cool Socks",
+    "description": "Very comfortable socks",
+    "price": 9.99,
+    "categoryId": 1,
+    "brandId": 1,
+    "inventory": 100,
+    "featured": false,
+    "images": ["image1.jpg"],
+    "colors": ["Red", "Blue"],
+    "sizes": ["S", "M", "L"]
+  }'
+
+# Update product (Admin only)
+curl -X PUT http://localhost:8080/api/products/1 \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Updated Socks",
+    "price": 12.99
+  }'
+
+# Delete product (Admin only)
+curl -X DELETE http://localhost:8080/api/products/1 \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+3. Category APIs:
+
+```bash
+# Get all categories
+curl -X GET http://localhost:8080/api/categories
+
+# Create category (Admin only)
+curl -X POST http://localhost:8080/api/categories \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Sports Socks",
+    "description": "Athletic socks",
+    "imageUrl": "category.jpg"
+  }'
+```
+
+4. Brand APIs:
+
+```bash
+# Get all brands
+curl -X GET http://localhost:8080/api/brands
+
+# Get featured brands
+curl -X GET http://localhost:8080/api/brands/featured
+
+# Create brand (Admin only)
+curl -X POST http://localhost:8080/api/brands \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "SockMaster",
+    "description": "Premium socks",
+    "logo": "logo.jpg",
+    "featured": true
+  }'
+```
+
+5. Cart APIs:
+
+```bash
+# Get user's cart
+curl -X GET http://localhost:8080/api/cart \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Add item to cart
+curl -X POST http://localhost:8080/api/cart \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "productId": 1,
+    "quantity": 2,
+    "color": "Blue",
+    "size": "M"
+  }'
+
+# Update cart item quantity
+curl -X PUT http://localhost:8080/api/cart/items/1 \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "quantity": 3
+  }'
+
+# Remove item from cart
+curl -X DELETE http://localhost:8080/api/cart/items/1 \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Clear cart
+curl -X DELETE http://localhost:8080/api/cart \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+6. Order APIs:
+
+```bash
+# Create order from cart
+curl -X POST http://localhost:8080/api/orders \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "street": "123 Main St",
+    "city": "Boston",
+    "state": "MA",
+    "zipCode": "02108",
+    "country": "USA"
+  }'
+
+# Get user's orders
+curl -X GET http://localhost:8080/api/orders \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Get specific order
+curl -X GET http://localhost:8080/api/orders/1 \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+7. Admin APIs:
+
+```bash
+# Get all orders (Admin only)
+curl -X GET http://localhost:8080/api/admin/orders \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Update order status (Admin only)
+curl -X PUT http://localhost:8080/api/admin/orders/1/status \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "status": "PROCESSING"
+  }'
+
+# Get all customers (Admin only)
+curl -X GET http://localhost:8080/api/admin/customers \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Get analytics data (Admin only)
+curl -X GET http://localhost:8080/api/admin/analytics/sales \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+curl -X GET http://localhost:8080/api/admin/analytics/products \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+curl -X GET http://localhost:8080/api/admin/analytics/customers \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+## Important Notes
+
+1. Error Handling
+   - All endpoints return appropriate HTTP status codes
+   - Validation errors return 400 Bad Request
+   - Authentication errors return 401 Unauthorized
+   - Authorization errors return 403 Forbidden
+   - Not found errors return 404 Not Found
+
+2. Security Notes
+   - JWT tokens expire after 24 hours
+   - Passwords are hashed using BCrypt
+   - CORS is configured for frontend access
+   - Endpoints are protected based on user roles
+
+3. Database Considerations
+   - Uses MySQL database
+   - JPA/Hibernate for ORM
+   - Transactions are managed automatically
+   - Optimistic locking for concurrent access
+
+4. Best Practices
+   - DTOs used for data transfer
+   - Input validation at controller level
+   - Service layer for business logic
+   - Repository layer for data access
+   - Exception handling with custom exceptions
