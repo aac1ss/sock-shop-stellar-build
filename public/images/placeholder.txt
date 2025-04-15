@@ -1,3 +1,4 @@
 
-This is a placeholder file to ensure the folder structure exists.
-Please replace logo.png with your actual logo image.
+This folder contains the logo files for the application:
+- black.png - Used in light mode
+- white.png - Used in dark mode

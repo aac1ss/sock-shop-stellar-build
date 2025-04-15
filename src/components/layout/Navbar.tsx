@@ -20,17 +20,18 @@ import {
   NavigationMenu,
   NavigationMenuContent,
   NavigationMenuItem,
-  NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
-  navigationMenuTriggerStyle,
+  NavigationMenuLink,
 } from '@/components/ui/navigation-menu';
+import { useTheme } from '@/context/ThemeContext';
 
 const Navbar = () => {
   const { getCartItemCount } = useCart();
   const { user, isAuthenticated, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const { theme } = useTheme();
   
   const handleLogout = () => {
     logout();
@@ -58,9 +59,9 @@ const Navbar = () => {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center">
-            <div className="h-10 w-auto overflow-hidden">
+            <div className="h-8 w-auto overflow-hidden">
               <img 
-                src="/images/logo/logo.png" 
+                src={theme === 'light' ? "/images/logo/black.png" : "/images/logo/white.png"}
                 alt="The Socks Box" 
                 className="h-full w-auto object-contain" 
               />
@@ -226,18 +227,19 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu - Fixed position with transform instead of inset-0 positioning */}
       <div 
         className={cn(
-          "fixed inset-0 bg-background/95 backdrop-blur-sm z-50 md:hidden transition-transform duration-300 transform", 
+          "fixed inset-y-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm md:hidden transition-transform duration-300", 
           isMenuOpen ? "translate-x-0" : "translate-x-full"
         )}
+        style={{ overflowY: 'auto', maxHeight: '100vh', width: '100%' }}
       >
         <div className="flex flex-col h-full p-6">
           <div className="flex justify-between items-center mb-8">
             <div className="h-8 w-auto">
               <img 
-                src="/images/logo/logo.png" 
+                src={theme === 'light' ? "/images/logo/black.png" : "/images/logo/white.png"}
                 alt="The Socks Box" 
                 className="h-full w-auto object-contain" 
               />
