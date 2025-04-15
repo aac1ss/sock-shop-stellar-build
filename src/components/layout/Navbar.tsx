@@ -25,6 +25,8 @@ import {
   NavigationMenuLink,
 } from '@/components/ui/navigation-menu';
 import { useTheme } from '@/context/ThemeContext';
+import { Drawer, DrawerContent, DrawerTrigger, DrawerClose } from "@/components/ui/drawer";
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Navbar = () => {
   const { getCartItemCount } = useCart();
@@ -32,6 +34,7 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
   const { theme } = useTheme();
+  const isMobile = useIsMobile();
   
   const handleLogout = () => {
     logout();
@@ -47,7 +50,6 @@ const Navbar = () => {
         .substring(0, 2)
     : 'U';
 
-  // Function to close mobile menu
   const closeMobileMenu = () => {
     setIsMenuOpen(false);
   };
@@ -55,11 +57,10 @@ const Navbar = () => {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 py-3">
-        {/* Top Header with Logo and Actions */}
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center">
-            <div className="h-8 w-auto overflow-hidden">
+            <div className="h-10 w-auto overflow-hidden">
               <img 
                 src={theme === 'light' ? "/images/logo/black.png" : "/images/logo/white.png"}
                 alt="The Socks Box" 
@@ -214,106 +215,105 @@ const Navbar = () => {
               </Button>
             </Link>
 
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="md:hidden"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              aria-label={isMenuOpen ? "Close menu" : "Open menu"}
-            >
-              {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile Menu - Fixed position with transform instead of inset-0 positioning */}
-      <div 
-        className={cn(
-          "fixed inset-y-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm md:hidden transition-transform duration-300", 
-          isMenuOpen ? "translate-x-0" : "translate-x-full"
-        )}
-        style={{ overflowY: 'auto', maxHeight: '100vh', width: '100%' }}
-      >
-        <div className="flex flex-col h-full p-6">
-          <div className="flex justify-between items-center mb-8">
-            <div className="h-8 w-auto">
-              <img 
-                src={theme === 'light' ? "/images/logo/black.png" : "/images/logo/white.png"}
-                alt="The Socks Box" 
-                className="h-full w-auto object-contain" 
-              />
-            </div>
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={closeMobileMenu}
-              aria-label="Close menu"
-            >
-              <X className="h-5 w-5" />
-            </Button>
-          </div>
-
-          <div className="space-y-6">
-            <Link
-              to="/"
-              className="block text-lg font-medium hover:text-primary transition-colors"
-              onClick={closeMobileMenu}
-            >
-              Home
-            </Link>
-            <Link
-              to="/products"
-              className="block text-lg font-medium hover:text-primary transition-colors"
-              onClick={closeMobileMenu}
-            >
-              Products
-            </Link>
-            <Link
-              to="/categories"
-              className="block text-lg font-medium hover:text-primary transition-colors"
-              onClick={closeMobileMenu}
-            >
-              Categories
-            </Link>
-            <Link
-              to="/about"
-              className="block text-lg font-medium hover:text-primary transition-colors"
-              onClick={closeMobileMenu}
-            >
-              About
-            </Link>
-            <Link
-              to="/contact"
-              className="block text-lg font-medium hover:text-primary transition-colors"
-              onClick={closeMobileMenu}
-            >
-              Contact
-            </Link>
-          </div>
-
-          <div className="mt-auto p-4 rounded-md border border-border">
-            {isAuthenticated ? (
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="font-medium">{user?.name}</p>
-                  <p className="text-sm text-muted-foreground">{user?.email}</p>
-                </div>
-                <Button onClick={handleLogout}>
-                  Logout
-                </Button>
-              </div>
-            ) : (
-              <div className="flex justify-between items-center">
-                <Link to="/login" className="font-medium" onClick={closeMobileMenu}>
-                  Sign In
-                </Link>
-                <Link to="/register" onClick={closeMobileMenu}>
-                  <Button>
-                    Register
+            {/* Mobile menu button - Using Sheet/Drawer instead of custom overlay */}
+            {isMobile ? (
+              <Drawer direction="right">
+                <DrawerTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    aria-label="Open menu"
+                  >
+                    <Menu className="h-5 w-5" />
                   </Button>
-                </Link>
-              </div>
+                </DrawerTrigger>
+                <DrawerContent className="h-[100dvh] w-full max-w-full" side="right">
+                  <div className="flex flex-col h-full">
+                    <div className="flex justify-between items-center p-4 border-b">
+                      <div className="h-10 w-auto">
+                        <img 
+                          src={theme === 'light' ? "/images/logo/black.png" : "/images/logo/white.png"}
+                          alt="The Socks Box" 
+                          className="h-full w-auto object-contain" 
+                        />
+                      </div>
+                      <DrawerClose asChild>
+                        <Button variant="ghost" size="icon">
+                          <X className="h-5 w-5" />
+                        </Button>
+                      </DrawerClose>
+                    </div>
+                    
+                    <div className="flex flex-col p-6 space-y-6 overflow-y-auto flex-1">
+                      <Link
+                        to="/"
+                        className="text-lg font-medium hover:text-primary transition-colors"
+                      >
+                        Home
+                      </Link>
+                      <Link
+                        to="/products"
+                        className="text-lg font-medium hover:text-primary transition-colors"
+                      >
+                        Products
+                      </Link>
+                      <Link
+                        to="/categories"
+                        className="text-lg font-medium hover:text-primary transition-colors"
+                      >
+                        Categories
+                      </Link>
+                      <Link
+                        to="/about"
+                        className="text-lg font-medium hover:text-primary transition-colors"
+                      >
+                        About
+                      </Link>
+                      <Link
+                        to="/contact"
+                        className="text-lg font-medium hover:text-primary transition-colors"
+                      >
+                        Contact
+                      </Link>
+                    </div>
+                    
+                    <div className="mt-auto p-4 border-t">
+                      {isAuthenticated ? (
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <p className="font-medium">{user?.name}</p>
+                            <p className="text-sm text-muted-foreground">{user?.email}</p>
+                          </div>
+                          <Button onClick={handleLogout}>
+                            Logout
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex justify-between items-center">
+                          <Link to="/login" className="font-medium">
+                            Sign In
+                          </Link>
+                          <Link to="/register">
+                            <Button>
+                              Register
+                            </Button>
+                          </Link>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </DrawerContent>
+              </Drawer>
+            ) : (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+                className="md:hidden"
+              >
+                {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </Button>
             )}
           </div>
         </div>
