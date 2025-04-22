@@ -1,13 +1,8 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-
-type User = {
-  id: string;
-  email: string;
-  name: string;
-  role: 'admin' | 'customer';
-};
+import { User } from '@/types';
+import axios from 'axios';
 
 type AuthContextType = {
   user: User | null;
@@ -20,72 +15,69 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Set the base URL for API requests
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  useEffect(() => {
-    // Check if user is already logged in
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error('Failed to parse user from localStorage', error);
-        localStorage.removeItem('user');
+  // Set up axios defaults
+  axios.defaults.baseURL = API_URL;
+  
+  // Set up axios interceptor to add the token to every request
+  axios.interceptors.request.use(
+    (config) => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
       }
-    }
-    setIsLoading(false);
+      return config;
+    },
+    (error) => Promise.reject(error)
+  );
+
+  useEffect(() => {
+    const initializeAuth = async () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const response = await axios.get('/auth/user');
+          setUser(response.data);
+        } catch (error) {
+          console.error('Failed to fetch user profile', error);
+          localStorage.removeItem('token');
+        }
+      }
+      setIsLoading(false);
+    };
+
+    initializeAuth();
   }, []);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // In a real app, you would call your Spring Boot API here
-      // const response = await fetch('/api/login', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ email, password }),
-      // });
+      const response = await axios.post('/auth/login', { email, password });
       
-      // For demo purposes, we'll simulate a successful login
-      // Replace this with actual API call in production
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock response based on email to simulate different user roles
-      let mockUser: User;
-      if (email === 'admin@example.com') {
-        mockUser = {
-          id: '1',
-          email: 'admin@example.com',
-          name: 'Admin User',
-          role: 'admin'
-        };
-      } else {
-        mockUser = {
-          id: '2',
-          email: email,
-          name: 'Customer User',
-          role: 'customer'
-        };
-      }
-      
-      setUser(mockUser);
-      localStorage.setItem('user', JSON.stringify(mockUser));
+      const { token, user } = response.data;
+      localStorage.setItem('token', token);
+      setUser(user);
       
       toast({
         title: "Login successful",
-        description: `Welcome back, ${mockUser.name}!`,
+        description: `Welcome back, ${user.name}!`,
       });
       
     } catch (error) {
+      console.error('Login error:', error);
       toast({
         title: "Login failed",
         description: "Invalid email or password.",
         variant: "destructive",
       });
-      console.error('Login error:', error);
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -94,46 +86,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (name: string, email: string, password: string) => {
     setIsLoading(true);
     try {
-      // In a real app, you would call your Spring Boot API here
-      // const response = await fetch('/api/register', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ name, email, password }),
-      // });
+      const response = await axios.post('/auth/register', { name, email, password });
       
-      // For demo purposes, we'll simulate a successful registration
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const newUser: User = {
-        id: Math.random().toString(36).substring(2, 9),
-        email,
-        name,
-        role: 'customer'
-      };
-      
-      setUser(newUser);
-      localStorage.setItem('user', JSON.stringify(newUser));
+      const { token, user } = response.data;
+      localStorage.setItem('token', token);
+      setUser(user);
       
       toast({
         title: "Registration successful",
         description: `Welcome to The Socks Box, ${name}!`,
       });
       
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Registration error:', error);
       toast({
         title: "Registration failed",
-        description: "There was a problem creating your account.",
+        description: error.response?.data || "There was a problem creating your account.",
         variant: "destructive",
       });
-      console.error('Registration error:', error);
+      throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
   const logout = () => {
+    localStorage.removeItem('token');
     setUser(null);
-    localStorage.removeItem('user');
     toast({
       title: "Logged out",
       description: "You have been successfully logged out.",

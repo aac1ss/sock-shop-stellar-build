@@ -215,9 +215,9 @@ const Navbar = () => {
               </Button>
             </Link>
 
-            {/* Mobile menu button - Using Sheet/Drawer instead of custom overlay */}
+            {/* Mobile menu button - Using Drawer instead of custom overlay */}
             {isMobile ? (
-              <Drawer direction="right">
+              <Drawer>
                 <DrawerTrigger asChild>
                   <Button 
                     variant="ghost" 
@@ -227,7 +227,7 @@ const Navbar = () => {
                     <Menu className="h-5 w-5" />
                   </Button>
                 </DrawerTrigger>
-                <DrawerContent className="h-[100dvh] w-full max-w-full" side="right">
+                <DrawerContent className="h-[100dvh] w-full max-w-full">
                   <div className="flex flex-col h-full">
                     <div className="flex justify-between items-center p-4 border-b">
                       <div className="h-10 w-auto">
