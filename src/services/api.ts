@@ -58,6 +58,9 @@ export const productsAPI = {
   
   getById: (id: string) => 
     api.get(`/products/${id}`),
+    
+  getByCategory: (categoryId: string) => 
+    api.get(`/products/category/${categoryId}`),
 };
 
 // Add more API endpoints as needed...
