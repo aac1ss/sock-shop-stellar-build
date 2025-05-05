@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { User } from '@/types';
+import { authAPI } from '@/services/api';
 import axios from 'axios';
 
 type AuthContextType = {
@@ -43,7 +44,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const token = localStorage.getItem('token');
       if (token) {
         try {
-          const response = await axios.get('/auth/user');
+          const response = await authAPI.getCurrentUser();
           setUser(response.data);
         } catch (error) {
           console.error('Failed to fetch user profile', error);
@@ -59,7 +60,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const response = await axios.post('/auth/login', { email, password });
+      const response = await authAPI.login(email, password);
       
       const { token, user } = response.data;
       localStorage.setItem('token', token);
@@ -86,7 +87,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (name: string, email: string, password: string) => {
     setIsLoading(true);
     try {
-      const response = await axios.post('/auth/register', { name, email, password });
+      const response = await authAPI.register(name, email, password);
       
       const { token, user } = response.data;
       localStorage.setItem('token', token);
