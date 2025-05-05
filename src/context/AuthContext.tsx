@@ -87,7 +87,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (name: string, email: string, password: string) => {
     setIsLoading(true);
     try {
+      console.log("Registering user:", { name, email, password });
       const response = await authAPI.register(name, email, password);
+      console.log("Registration response:", response.data);
       
       const { token, user } = response.data;
       localStorage.setItem('token', token);
@@ -102,7 +104,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('Registration error:', error);
       toast({
         title: "Registration failed",
-        description: error.response?.data || "There was a problem creating your account.",
+        description: error.response?.data?.message || error.message || "There was a problem creating your account.",
         variant: "destructive",
       });
       throw error;

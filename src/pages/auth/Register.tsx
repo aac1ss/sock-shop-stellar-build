@@ -50,13 +50,14 @@ const Register = () => {
   const onSubmit = async (data: FormData) => {
     setIsLoading(true);
     try {
+      console.log("Form submission data:", data);
       await registerUser(data.name, data.email, data.password);
       navigate('/');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Registration error:', error);
       toast({
         title: 'Registration Failed',
-        description: 'There was a problem creating your account',
+        description: error.response?.data?.message || "There was a problem creating your account",
         variant: 'destructive',
       });
     } finally {
