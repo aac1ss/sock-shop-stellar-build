@@ -1,73 +1,137 @@
-# Welcome to your Lovable project
 
-## Project info
+# The Socks Box E-commerce Application
 
-**URL**: https://lovable.dev/projects/88ed56eb-7b96-45b7-ab40-0351e5e6de7c
+This is a full-stack e-commerce application for selling socks online. The application consists of a React frontend and a Spring Boot backend.
 
-## How can I edit this code?
+## Project Structure
 
-There are several ways of editing your application.
+- `src/` - Frontend React application
+- `backend/` - Spring Boot backend application
 
-**Use Lovable**
+## Backend Setup (Spring Boot)
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/88ed56eb-7b96-45b7-ab40-0351e5e6de7c) and start prompting.
+### Prerequisites
 
-Changes made via Lovable will be committed automatically to this repo.
+- Java 21 or later
+- Maven
+- MySQL 8.0
 
-**Use your preferred IDE**
+### Configuration
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+The backend configuration is in `backend/src/main/resources/application.properties`. You may need to update the database configuration:
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+```properties
+spring.datasource.url=jdbc:mysql://localhost:3306/socksbox?createDatabaseIfNotExist=true
+spring.datasource.username=root
+spring.datasource.password=password
+```
 
-Follow these steps:
+### Running the Backend
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+```bash
+cd backend
+mvn spring-boot:run
+```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+The backend API will be available at `http://localhost:6969/api`.
 
-# Step 3: Install the necessary dependencies.
-npm i
+## Frontend Setup (React)
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+### Prerequisites
+
+- Node.js (v16 or later)
+- npm (v8 or later)
+
+### Configuration
+
+The frontend configuration is in `.env` file:
+
+```properties
+VITE_API_URL=http://localhost:6969/api
+```
+
+### Running the Frontend
+
+```bash
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The frontend will be available at `http://localhost:3000`.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Running the Complete Application
 
-**Use GitHub Codespaces**
+1. Start the MySQL database server
+2. Start the backend server:
+   ```bash
+   cd backend
+   mvn spring-boot:run
+   ```
+3. In another terminal, start the frontend development server:
+   ```bash
+   npm run dev
+   ```
+4. Access the application at `http://localhost:3000`
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Authentication
 
-## What technologies are used for this project?
+The application uses JWT for authentication:
 
-This project is built with:
+- Register a new account at `/register`
+- Login with your credentials at `/login`
+- Protected routes require a valid JWT token
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Features
 
-## How can I deploy this project?
+- User registration and authentication
+- Product browsing and filtering
+- Shopping cart functionality
+- Order placement and management
+- Admin dashboard for managing products, orders, and users
+- Responsive design for all devices
 
-Simply open [Lovable](https://lovable.dev/projects/88ed56eb-7b96-45b7-ab40-0351e5e6de7c) and click on Share -> Publish.
+## API Endpoints
 
-## Can I connect a custom domain to my Lovable project?
+### Authentication
 
-Yes it is!
+- `POST /api/auth/register` - Register a new user
+- `POST /api/auth/login` - Login and get JWT token
+- `GET /api/auth/user` - Get current user
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### Products
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+- `GET /api/products` - Get all products
+- `GET /api/products/{id}` - Get product by ID
+- `GET /api/products/category/{categoryId}` - Get products by category
+
+### Categories
+
+- `GET /api/categories` - Get all categories
+- `GET /api/categories/{id}` - Get category by ID
+
+### Brands
+
+- `GET /api/brands` - Get all brands
+- `GET /api/brands/featured` - Get featured brands
+- `GET /api/brands/{id}` - Get brand by ID
+
+### Cart
+
+- `GET /api/cart` - Get user's cart
+- `POST /api/cart` - Add item to cart
+- `PUT /api/cart/items/{itemId}` - Update cart item quantity
+- `DELETE /api/cart/items/{itemId}` - Remove item from cart
+- `DELETE /api/cart` - Clear cart
+
+### Orders
+
+- `GET /api/orders` - Get user's orders
+- `POST /api/orders` - Create order from cart
+- `GET /api/orders/{id}` - Get order by ID
+
+### Admin
+
+- `GET /api/admin/customers` - Get all customers (Admin only)
+- `GET /api/admin/orders` - Get all orders (Admin only)
+- `PUT /api/admin/orders/{id}/status` - Update order status (Admin only)
+- `GET /api/admin/analytics/sales` - Get sales data (Admin only)
