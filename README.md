@@ -1,137 +1,158 @@
 
 # The Socks Box E-commerce Application
 
-This is a full-stack e-commerce application for selling socks online. The application consists of a React frontend and a Spring Boot backend.
+A modern e-commerce platform for selling socks, built with React for the frontend and Spring Boot for the backend.
 
 ## Project Structure
 
-- `src/` - Frontend React application
-- `backend/` - Spring Boot backend application
+The project consists of two main parts:
+- **Frontend**: A React application with TypeScript, Tailwind CSS, and Shadcn UI
+- **Backend**: A Spring Boot application with Java 21, MySQL, and JWT authentication
 
-## Backend Setup (Spring Boot)
+## Prerequisites
 
-### Prerequisites
-
-- Java 21 or later
+- Node.js (v16+)
+- Java 21
+- MySQL 8.0+
 - Maven
-- MySQL 8.0
 
-### Configuration
+## Getting Started
 
-The backend configuration is in `backend/src/main/resources/application.properties`. You may need to update the database configuration:
+### Backend Setup
 
-```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/socksbox?createDatabaseIfNotExist=true
-spring.datasource.username=root
-spring.datasource.password=password
-```
-
-### Running the Backend
-
-```bash
-cd backend
-mvn spring-boot:run
-```
-
-The backend API will be available at `http://localhost:6969/api`.
-
-## Frontend Setup (React)
-
-### Prerequisites
-
-- Node.js (v16 or later)
-- npm (v8 or later)
-
-### Configuration
-
-The frontend configuration is in `.env` file:
-
-```properties
-VITE_API_URL=http://localhost:6969/api
-```
-
-### Running the Frontend
-
-```bash
-npm install
-npm run dev
-```
-
-The frontend will be available at `http://localhost:3000`.
-
-## Running the Complete Application
-
-1. Start the MySQL database server
-2. Start the backend server:
+1. Navigate to the backend directory:
    ```bash
    cd backend
+   ```
+
+2. Configure your MySQL database in `src/main/resources/application.properties`. Update the username and password:
+   ```properties
+   spring.datasource.username=your_mysql_username
+   spring.datasource.password=your_mysql_password
+   ```
+
+3. Build and run the backend:
+   ```bash
+   mvn clean package
+   java -jar target/socks-box-backend-0.0.1-SNAPSHOT.jar
+   ```
+   Alternatively, you can run it directly with Maven:
+   ```bash
    mvn spring-boot:run
    ```
-3. In another terminal, start the frontend development server:
+
+4. The backend server will start on port 6969 with the base path `/api`.
+
+### Frontend Setup
+
+1. From the root directory, install dependencies:
+   ```bash
+   npm install
+   ```
+
+2. The `.env` file should already be configured to connect to the backend server. If needed, you can modify:
+   ```
+   VITE_API_URL=http://localhost:6969/api
+   ```
+
+3. Start the development server:
    ```bash
    npm run dev
    ```
-4. Access the application at `http://localhost:3000`
 
-## Authentication
-
-The application uses JWT for authentication:
-
-- Register a new account at `/register`
-- Login with your credentials at `/login`
-- Protected routes require a valid JWT token
+4. The frontend will be available at `http://localhost:8080`.
 
 ## Features
 
-- User registration and authentication
-- Product browsing and filtering
-- Shopping cart functionality
-- Order placement and management
-- Admin dashboard for managing products, orders, and users
-- Responsive design for all devices
+### Customer Features
+- Browse products by categories and brands
+- Search products with filters (price, category, brand)
+- View product details with color and size options
+- Add products to cart
+- Manage cart (add, remove, update quantities)
+- Create an account and log in
+- Checkout process
+- View order history and status
+
+### Admin Features
+- Dashboard with sales analytics
+- Product management (add, edit, delete products)
+- Order management (view, update status)
+- Customer management
+- Category and brand management
 
 ## API Endpoints
 
 ### Authentication
-
-- `POST /api/auth/register` - Register a new user
-- `POST /api/auth/login` - Login and get JWT token
-- `GET /api/auth/user` - Get current user
+- `POST /api/auth/login`: User login
+- `POST /api/auth/register`: User registration
+- `GET /api/auth/user`: Get current user
 
 ### Products
+- `GET /api/products`: Get all products or filter by criteria
+- `GET /api/products/featured`: Get featured products
+- `GET /api/products/{id}`: Get product by ID
+- `POST /api/products`: Create new product (admin only)
+- `PUT /api/products/{id}`: Update product (admin only)
+- `DELETE /api/products/{id}`: Delete product (admin only)
 
-- `GET /api/products` - Get all products
-- `GET /api/products/{id}` - Get product by ID
-- `GET /api/products/category/{categoryId}` - Get products by category
-
-### Categories
-
-- `GET /api/categories` - Get all categories
-- `GET /api/categories/{id}` - Get category by ID
-
-### Brands
-
-- `GET /api/brands` - Get all brands
-- `GET /api/brands/featured` - Get featured brands
-- `GET /api/brands/{id}` - Get brand by ID
+### Categories and Brands
+- `GET /api/categories`: Get all categories
+- `GET /api/brands`: Get all brands
+- `GET /api/brands/featured`: Get featured brands
 
 ### Cart
-
-- `GET /api/cart` - Get user's cart
-- `POST /api/cart` - Add item to cart
-- `PUT /api/cart/items/{itemId}` - Update cart item quantity
-- `DELETE /api/cart/items/{itemId}` - Remove item from cart
-- `DELETE /api/cart` - Clear cart
+- `GET /api/cart`: Get user's cart
+- `POST /api/cart`: Add item to cart
+- `PUT /api/cart/items/{itemId}`: Update cart item quantity
+- `DELETE /api/cart/items/{itemId}`: Remove item from cart
+- `DELETE /api/cart`: Clear cart
 
 ### Orders
-
-- `GET /api/orders` - Get user's orders
-- `POST /api/orders` - Create order from cart
-- `GET /api/orders/{id}` - Get order by ID
+- `POST /api/orders`: Create order from cart
+- `GET /api/orders`: Get user's orders
+- `GET /api/orders/{id}`: Get order by ID
 
 ### Admin
+- `GET /api/admin/customers`: Get all customers
+- `GET /api/admin/orders`: Get all orders
+- `PUT /api/admin/orders/{id}/status`: Update order status
+- `GET /api/admin/analytics/sales`: Get sales analytics data
+- `GET /api/admin/analytics/products`: Get product performance data
+- `GET /api/admin/analytics/customers`: Get customer acquisition data
 
-- `GET /api/admin/customers` - Get all customers (Admin only)
-- `GET /api/admin/orders` - Get all orders (Admin only)
-- `PUT /api/admin/orders/{id}/status` - Update order status (Admin only)
-- `GET /api/admin/analytics/sales` - Get sales data (Admin only)
+## Default Accounts
+
+The system doesn't come with default accounts. You'll need to register as a new user. To create an admin account, you'll need to manually update the user role in the database:
+
+```sql
+UPDATE users SET role = 'ADMIN' WHERE email = 'your-email@example.com';
+```
+
+## Technologies Used
+
+### Frontend
+- React 18
+- TypeScript
+- Tailwind CSS
+- Shadcn UI Components
+- React Router
+- React Query
+- Axios
+- React Hook Form
+- Zod (for validation)
+- Recharts (for analytics)
+
+### Backend
+- Spring Boot 3
+- Java 21
+- Spring Security
+- JWT Authentication
+- Spring Data JPA
+- MySQL
+- Lombok
+- Validation API
+
+## License
+
+This project is licensed under the MIT License.
