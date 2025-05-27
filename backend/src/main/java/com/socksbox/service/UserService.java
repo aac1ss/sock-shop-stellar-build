@@ -66,6 +66,11 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(userDto.getPassword()));
         user.setRole(role);
         user.setImage(userDto.getImage());
+        user.setPhone(userDto.getPhone());
+        user.setAddress(userDto.getAddress());
+        user.setCity(userDto.getCity());
+        user.setState(userDto.getState());
+        user.setZipCode(userDto.getZipCode());
 
         User savedUser = userRepository.save(user);
         
@@ -102,6 +107,11 @@ public class UserService {
         userDto.setEmail(user.getEmail());
         userDto.setRole(user.getRole().name());
         userDto.setImage(user.getImage());
+        userDto.setPhone(user.getPhone());
+        userDto.setAddress(user.getAddress());
+        userDto.setCity(user.getCity());
+        userDto.setState(user.getState());
+        userDto.setZipCode(user.getZipCode());
         return userDto;
     }
 }

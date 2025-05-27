@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingCart, Menu, X, Heart, User, LogOut, Settings, LayoutDashboard } from 'lucide-react';
@@ -293,9 +292,9 @@ const Navbar = () => {
                           <Link to="/login" className="font-medium">
                             Sign In
                           </Link>
-                          <Link to="/register">
+                          <Link to="/user-type-selection">
                             <Button>
-                              Register
+                              Sign Up
                             </Button>
                           </Link>
                         </div>

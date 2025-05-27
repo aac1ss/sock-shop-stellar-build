@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,6 +10,7 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { CartProvider } from "@/context/CartContext";
 import SellerDashboard from '@/pages/seller/Dashboard';
+import UserTypeSelection from "./pages/auth/UserTypeSelection";
 
 // Pages
 import Home from "./pages/Home";
@@ -48,6 +48,7 @@ function App() {
               {/* Auth Routes */}
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/user-type-selection" element={<UserTypeSelection />} />
               
               {/* Admin Routes */}
               <Route path="/admin" element={
@@ -113,7 +114,7 @@ function App() {
               <Route 
                 path="/seller/dashboard" 
                 element={
-                  <ProtectedRoute allowedRole="customer">
+                  <ProtectedRoute allowedRole="seller">
                     <Layout>
                       <SellerDashboard />
                     </Layout>
@@ -121,7 +122,7 @@ function App() {
                 } 
               />
               
-              {/* Customer Routes */}
+              {/* Public Routes */}
               <Route path="/" element={
                 <Layout>
                   <Home />

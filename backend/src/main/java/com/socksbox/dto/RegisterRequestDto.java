@@ -23,4 +23,11 @@ public class RegisterRequestDto {
     @NotBlank(message = "Password is required")
     @Size(min = 6, message = "Password must be at least 6 characters")
     private String password;
+    
+    private String phone;
+    private String address;
+    private String city;
+    private String state;
+    private String zipCode;
+    private String userType; // "buyer" or "seller"
 }

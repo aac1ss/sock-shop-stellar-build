@@ -67,9 +67,19 @@ public class AuthController {
             userDto.setName(registerRequest.getName());
             userDto.setEmail(registerRequest.getEmail());
             userDto.setPassword(registerRequest.getPassword());
+            userDto.setPhone(registerRequest.getPhone());
+            userDto.setAddress(registerRequest.getAddress());
+            userDto.setCity(registerRequest.getCity());
+            userDto.setState(registerRequest.getState());
+            userDto.setZipCode(registerRequest.getZipCode());
 
+            // Map userType to Role
+            User.Role role = User.Role.CUSTOMER; // default
+            if ("seller".equalsIgnoreCase(registerRequest.getUserType())) {
+                role = User.Role.SELLER;
+            }
             
-            UserDto registeredUser = userService.createUser(userDto, User.Role.CUSTOMER);
+            UserDto registeredUser = userService.createUser(userDto, role);
             
             // Create authentication token
             Authentication authentication = authenticationManager.authenticate(

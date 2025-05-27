@@ -4,7 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 
 type ProtectedRouteProps = {
   children: React.ReactNode;
-  allowedRole?: 'admin' | 'customer' | undefined;
+  allowedRole?: 'admin' | 'customer' | 'seller' | undefined;
 };
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRole }) => {
@@ -21,8 +21,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRole }
   }
   
   // Check role permission if required
-  if (allowedRole && user?.role !== allowedRole) {
-    // Redirect to home if not admin
+  if (allowedRole && user?.role.toLowerCase() !== allowedRole.toLowerCase()) {
+    // Redirect to home if not authorized
     return <Navigate to="/" replace />;
   }
   

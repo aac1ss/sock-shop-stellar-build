@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -44,9 +44,13 @@ const Register = () => {
   const { register: registerUser } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [step1Data, setStep1Data] = useState<Step1Data | null>(null);
+  
+  // Get user type from navigation state or default to buyer
+  const userType = (location.state as any)?.userType || 'buyer';
 
   const step1Form = useForm<Step1Data>({
     resolver: zodResolver(step1Schema),
@@ -55,6 +59,13 @@ const Register = () => {
   const step2Form = useForm<Step2Data>({
     resolver: zodResolver(step2Schema),
   });
+
+  // Redirect to user type selection if no type is provided
+  useEffect(() => {
+    if (!location.state?.userType) {
+      navigate('/user-type-selection');
+    }
+  }, [location.state, navigate]);
 
   const onStep1Submit = (data: Step1Data) => {
     setStep1Data(data);
@@ -68,7 +79,8 @@ const Register = () => {
     try {
       await registerUser({
         ...step1Data,
-        ...data
+        ...data,
+        userType
       });
       navigate('/');
     } catch (error: any) {
@@ -103,7 +115,9 @@ const Register = () => {
               className="h-10" 
             />
           </div>
-          <CardTitle className="text-2xl text-center">Create Account</CardTitle>
+          <CardTitle className="text-2xl text-center">
+            Create {userType === 'seller' ? 'Seller' : 'Buyer'} Account
+          </CardTitle>
           <CardDescription className="text-center">
             {currentStep === 1 ? 'Enter your credentials' : 'Complete your profile'}
           </CardDescription>

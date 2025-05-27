@@ -33,14 +33,19 @@ public class User {
     private Role role = Role.CUSTOMER;
 
     @Column(nullable = false)
-    private Boolean active = true; // default to true
+    private Boolean active = true;
 
     private String image;
+    private String phone;
+    private String address;
+    private String city;
+    private String state;
+    private String zipCode;
     
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
     
     public enum Role {
-        CUSTOMER, ADMIN
+        CUSTOMER, SELLER, ADMIN
     }
 }
