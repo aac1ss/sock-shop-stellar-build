@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -112,7 +113,7 @@ function App() {
               <Route 
                 path="/seller/dashboard" 
                 element={
-                  <ProtectedRoute requiredRole="SELLER">
+                  <ProtectedRoute allowedRole="customer">
                     <Layout>
                       <SellerDashboard />
                     </Layout>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -77,7 +76,7 @@ const ProductDetail = () => {
     }
     
     addToCart(
-      product.id,
+      Number(product.id),
       quantity,
       selectedColor || product.colors?.[0] || 'default',
       selectedSize || product.sizes?.[1] || product.sizes?.[0] || 'M'

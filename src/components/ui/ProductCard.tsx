@@ -18,7 +18,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, featured = false }) 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    addToCart(product.id, 1, product.colors[0], product.sizes[1]);
+    addToCart(Number(product.id), 1, product.colors[0], product.sizes[1]);
   };
 
   return (
