@@ -31,7 +31,10 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role = Role.CUSTOMER;
-    
+
+    @Column(nullable = false)
+    private Boolean active = true; // default to true
+
     private String image;
     
     @Column(name = "created_at")

@@ -67,6 +67,7 @@ public class AuthController {
             userDto.setName(registerRequest.getName());
             userDto.setEmail(registerRequest.getEmail());
             userDto.setPassword(registerRequest.getPassword());
+
             
             UserDto registeredUser = userService.createUser(userDto, User.Role.CUSTOMER);
             
