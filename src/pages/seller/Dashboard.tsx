@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +18,7 @@ import { productsAPI, ordersAPI } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
 
 const SellerDashboard = () => {
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
   const [analytics, setAnalytics] = useState({
@@ -87,7 +89,7 @@ const SellerDashboard = () => {
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Seller Dashboard</h1>
-        <Button>
+        <Button onClick={() => navigate('/seller/add-product')}>
           <Plus className="mr-2 h-4 w-4" />
           Add Product
         </Button>
@@ -168,7 +170,7 @@ const SellerDashboard = () => {
                         <span className="font-medium">{product.name}</span>
                       </div>
                     </td>
-                    <td className="p-2">{product.category?.name}</td>
+                    <td className="p-2">{product.categoryName}</td>
                     <td className="p-2">${product.price}</td>
                     <td className="p-2">{product.inventory}</td>
                     <td className="p-2">

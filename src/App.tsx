@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,7 +10,6 @@ import { AuthProvider } from "@/context/AuthContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { CartProvider } from "@/context/CartContext";
-import SellerDashboard from '@/pages/seller/Dashboard';
 import UserTypeSelection from "./pages/auth/UserTypeSelection";
 
 // Pages
@@ -20,20 +20,27 @@ import Cart from "./pages/Cart";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
-import Dashboard from "./pages/admin/Dashboard";
-import AdminProducts from "./pages/admin/Products";
-import AdminOrders from "./pages/admin/Orders";
-import AdminCustomers from "./pages/admin/Customers";
-import AdminAnalytics from "./pages/admin/Analytics";
-import AdminBrands from "./pages/admin/Brands";
 import Categories from "./pages/Categories";
 import Brands from "./pages/Brands";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 
+// Admin Dashboard Pages
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminProducts from "./pages/admin/Products";
+import AdminOrders from "./pages/admin/Orders";
+import AdminCustomers from "./pages/admin/Customers";
+import AdminAnalytics from "./pages/admin/Analytics";
+import AdminBrands from "./pages/admin/Brands";
+
 // Customer Dashboard Pages
-import CustomerDashboard from "./pages/customer/Dashboard";
+import CustomerDashboard from "./pages/customer/CustomerDashboard";
 import OrderHistory from "./pages/customer/OrderHistory";
+
+// Seller Pages
+import SellerDashboard from './pages/seller/Dashboard';
+import CompanyRegistration from './pages/seller/CompanyRegistration';
+import AddProduct from './pages/seller/AddProduct';
 
 const queryClient = new QueryClient();
 
@@ -54,7 +61,7 @@ function App() {
               <Route path="/admin" element={
                 <ProtectedRoute allowedRole="admin">
                   <AdminLayout>
-                    <Dashboard />
+                    <AdminDashboard />
                   </AdminLayout>
                 </ProtectedRoute>
               } />
@@ -96,14 +103,14 @@ function App() {
               
               {/* Customer Dashboard Routes */}
               <Route path="/customer/dashboard" element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRole="customer">
                   <Layout>
                     <CustomerDashboard />
                   </Layout>
                 </ProtectedRoute>
               } />
               <Route path="/customer/orders" element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRole="customer">
                   <Layout>
                     <OrderHistory />
                   </Layout>
@@ -111,16 +118,25 @@ function App() {
               } />
               
               {/* Seller Routes */}
-              <Route 
-                path="/seller/dashboard" 
-                element={
-                  <ProtectedRoute allowedRole="seller">
-                    <Layout>
-                      <SellerDashboard />
-                    </Layout>
-                  </ProtectedRoute>
-                } 
-              />
+              <Route path="/seller/company-registration" element={
+                <ProtectedRoute allowedRole="seller">
+                  <CompanyRegistration />
+                </ProtectedRoute>
+              } />
+              <Route path="/seller/dashboard" element={
+                <ProtectedRoute allowedRole="seller">
+                  <Layout>
+                    <SellerDashboard />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              <Route path="/seller/add-product" element={
+                <ProtectedRoute allowedRole="seller">
+                  <Layout>
+                    <AddProduct />
+                  </Layout>
+                </ProtectedRoute>
+              } />
               
               {/* Public Routes */}
               <Route path="/" element={
