@@ -1,6 +1,7 @@
 
 package com.socksbox.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -21,6 +22,7 @@ public class CartItem {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cart_id", nullable = false)
+    @JsonIgnore
     private Cart cart;
     
     @ManyToOne(fetch = FetchType.LAZY)
@@ -34,6 +36,5 @@ public class CartItem {
     private BigDecimal price;
     
     private String color;
-    
     private String size;
 }

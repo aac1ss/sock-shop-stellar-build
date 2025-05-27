@@ -9,6 +9,7 @@ import java.util.List;
 
 @Repository
 public interface BrandRepository extends JpaRepository<Brand, Long> {
-    List<Brand> findByFeatured(Boolean featured);
+    Brand findByName(String name);
     boolean existsByName(String name);
+    List<Brand> findByFeatured(Boolean featured);
 }

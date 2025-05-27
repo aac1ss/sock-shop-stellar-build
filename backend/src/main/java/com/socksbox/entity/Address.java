@@ -1,7 +1,8 @@
 
 package com.socksbox.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,9 +14,7 @@ import lombok.NoArgsConstructor;
 public class Address {
     
     private String street;
-    
     private String city;
-    
     private String state;
     
     @Column(name = "zip_code")

@@ -1,219 +1,299 @@
 
-# The Socks Box - Backend API
+# The Socks Box - Spring Boot Backend
 
-A complete Spring Boot backend for The Socks Box e-commerce application built with Java 21.
+A comprehensive e-commerce backend application built with Spring Boot 3.2.5 and Java 21, featuring JWT authentication, PostgreSQL database integration, and full REST API functionality.
 
 ## Features
 
 - **Authentication & Authorization**: JWT-based security with role-based access control
-- **User Management**: Customer and admin user management
+- **User Management**: Customer and admin user roles with profile management
 - **Product Management**: Full CRUD operations for products, categories, and brands
-- **Shopping Cart**: Persistent cart functionality with user association
-- **Order Management**: Order creation, tracking, and status updates
-- **Analytics**: Sales analytics and performance metrics
-- **Data Validation**: Comprehensive input validation
-- **Exception Handling**: Global exception handling with meaningful error messages
+- **Shopping Cart**: Session-based cart management with item operations
+- **Order Management**: Complete order processing with status tracking
+- **Analytics**: Sales data, customer acquisition, and product performance metrics
+- **Database**: PostgreSQL with Hibernate/JPA integration
+- **Security**: CORS configuration, password encryption, and secure endpoints
 
-## Technology Stack
+## Tech Stack
 
 - **Java 21**
 - **Spring Boot 3.2.5**
-- **Spring Security 6** with JWT
+- **Spring Security 6**
 - **Spring Data JPA**
-- **H2 Database** (for development)
-- **MySQL** (for production)
-- **Lombok** for reducing boilerplate code
-- **Maven** for dependency management
+- **PostgreSQL** (Supabase)
+- **JWT** (JSON Web Tokens)
+- **Lombok**
+- **Maven**
 
-## Getting Started
-
-### Prerequisites
+## Prerequisites
 
 - Java 21 or higher
 - Maven 3.6+
-- MySQL 8.0+ (for production)
+- PostgreSQL database (Supabase)
 
-### Installation
+## Getting Started
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd backend
-   ```
+### 1. Clone the Repository
 
-2. **Build the project**
-   ```bash
-   mvn clean install
-   ```
-
-3. **Run the application**
-   ```bash
-   mvn spring-boot:run
-   ```
-
-The backend will start on `http://localhost:6969/api`
-
-### Database Configuration
-
-#### Development (H2 Database)
-The application is configured to use H2 in-memory database for development:
-- **URL**: `http://localhost:6969/api/h2-console`
-- **Username**: `sa`
-- **Password**: `password`
-
-#### Production (MySQL)
-To use MySQL, update `application.properties`:
-```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/socksbox?createDatabaseIfNotExist=true
-spring.datasource.username=your_username
-spring.datasource.password=your_password
-spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
-spring.jpa.database-platform=org.hibernate.dialect.MySQLDialect
+```bash
+git clone <repository-url>
+cd backend
 ```
+
+### 2. Configure Database
+
+Update `src/main/resources/application.properties` with your Supabase PostgreSQL credentials:
+
+```properties
+spring.datasource.url=jdbc:postgresql://your-supabase-db-url:5432/postgres?user=postgres&password=your-password
+```
+
+### 3. Build and Run
+
+```bash
+# Clean and compile
+mvn clean install
+
+# Run the application
+mvn spring-boot:run
+```
+
+The application will start on `http://localhost:6969/api`
+
+### 4. Default Users
+
+The application creates default users on first run:
+
+**Admin User:**
+- Email: `admin@socksbox.com`
+- Password: `admin123`
+
+**Customer User:**
+- Email: `customer@socksbox.com`
+- Password: `customer123`
 
 ## API Endpoints
 
 ### Authentication
-- `POST /api/auth/login` - User login
-- `POST /api/auth/register` - User registration
-- `GET /api/auth/user` - Get current user info
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/auth/login` | User login |
+| POST | `/auth/register` | User registration |
+| GET | `/auth/user` | Get current user |
 
 ### Products
-- `GET /api/products` - Get all products (with filtering)
-- `GET /api/products/featured` - Get featured products
-- `GET /api/products/{id}` - Get product by ID
-- `POST /api/products` - Create product (Admin only)
-- `PUT /api/products/{id}` - Update product (Admin only)
-- `DELETE /api/products/{id}` - Delete product (Admin only)
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | `/products` | Get all products | No |
+| GET | `/products/{id}` | Get product by ID | No |
+| GET | `/products/featured` | Get featured products | No |
+| GET | `/products/category/{id}` | Get products by category | No |
+| GET | `/products/brand/{id}` | Get products by brand | No |
+| POST | `/products` | Create product | Admin |
+| PUT | `/products/{id}` | Update product | Admin |
+| DELETE | `/products/{id}` | Delete product | Admin |
 
 ### Categories
-- `GET /api/categories` - Get all categories
-- `GET /api/categories/{id}` - Get category by ID
-- `POST /api/categories` - Create category (Admin only)
-- `PUT /api/categories/{id}` - Update category (Admin only)
-- `DELETE /api/categories/{id}` - Delete category (Admin only)
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | `/categories` | Get all categories | No |
+| GET | `/categories/{id}` | Get category by ID | No |
+| POST | `/categories` | Create category | Admin |
+| PUT | `/categories/{id}` | Update category | Admin |
+| DELETE | `/categories/{id}` | Delete category | Admin |
 
 ### Brands
-- `GET /api/brands` - Get all brands
-- `GET /api/brands/featured` - Get featured brands
-- `GET /api/brands/{id}` - Get brand by ID
-- `POST /api/brands` - Create brand (Admin only)
-- `PUT /api/brands/{id}` - Update brand (Admin only)
-- `DELETE /api/brands/{id}` - Delete brand (Admin only)
 
-### Shopping Cart
-- `GET /api/cart` - Get user's cart
-- `POST /api/cart` - Add item to cart
-- `PUT /api/cart/items/{itemId}` - Update cart item quantity
-- `DELETE /api/cart/items/{itemId}` - Remove item from cart
-- `DELETE /api/cart` - Clear cart
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | `/brands` | Get all brands | No |
+| GET | `/brands/{id}` | Get brand by ID | No |
+| GET | `/brands/featured` | Get featured brands | No |
+| POST | `/brands` | Create brand | Admin |
+| PUT | `/brands/{id}` | Update brand | Admin |
+| DELETE | `/brands/{id}` | Delete brand | Admin |
+
+### Cart
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | `/cart` | Get user cart | Customer |
+| POST | `/cart` | Add item to cart | Customer |
+| PUT | `/cart/items/{id}` | Update cart item | Customer |
+| DELETE | `/cart/items/{id}` | Remove cart item | Customer |
+| DELETE | `/cart` | Clear cart | Customer |
 
 ### Orders
-- `GET /api/orders` - Get user's orders
-- `GET /api/orders/{id}` - Get order by ID
-- `POST /api/orders` - Create order from cart
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | `/orders` | Get user orders | Customer |
+| GET | `/orders/{id}` | Get order by ID | Customer/Admin |
+| POST | `/orders` | Create order | Customer |
+| GET | `/admin/orders` | Get all orders | Admin |
+| PUT | `/admin/orders/{id}/status` | Update order status | Admin |
 
 ### Admin
-- `GET /api/admin/customers` - Get all customers
-- `GET /api/admin/customers/{id}` - Get customer by ID
-- `PUT /api/admin/customers/{id}` - Update customer
-- `GET /api/admin/orders` - Get all orders
-- `PUT /api/admin/orders/{id}/status` - Update order status
-- `GET /api/admin/analytics/sales` - Get sales analytics
-- `GET /api/admin/analytics/products` - Get product performance
-- `GET /api/admin/analytics/customers` - Get customer acquisition data
 
-## Default Users
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | `/admin/customers` | Get all customers | Admin |
+| GET | `/admin/customers/{id}` | Get customer by ID | Admin |
+| PUT | `/admin/customers/{id}` | Update customer | Admin |
+| GET | `/admin/analytics/sales` | Get sales analytics | Admin |
+| GET | `/admin/analytics/products` | Get product performance | Admin |
+| GET | `/admin/analytics/customers` | Get customer acquisition | Admin |
 
-The application creates default users on startup:
+## Request/Response Examples
 
-### Admin User
-- **Email**: `admin@socksbox.com`
-- **Password**: `admin123`
-- **Role**: ADMIN
+### Login Request
 
-### Test Customer
-- **Email**: `customer@socksbox.com`
-- **Password**: `customer123`
-- **Role**: CUSTOMER
-
-## Authentication
-
-The API uses JWT tokens for authentication. Include the token in the Authorization header:
-
-```bash
-Authorization: Bearer <your-jwt-token>
+```json
+POST /auth/login
+{
+  "email": "customer@socksbox.com",
+  "password": "customer123"
+}
 ```
 
-### Example Login Request
-```bash
-curl -X POST http://localhost:6969/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email": "admin@socksbox.com", "password": "admin123"}'
+### Login Response
+
+```json
+{
+  "token": "eyJhbGciOiJIUzUxMiJ9...",
+  "user": {
+    "id": 1,
+    "name": "John Doe",
+    "email": "customer@socksbox.com",
+    "role": "CUSTOMER"
+  }
+}
 ```
 
-## CORS Configuration
+### Add to Cart Request
 
-The backend is configured to accept requests from:
-- `http://localhost:3000` (React development server)
-- `http://localhost:8080` (Alternative frontend port)
+```json
+POST /cart
+Authorization: Bearer <token>
+{
+  "productId": 1,
+  "quantity": 2,
+  "color": "Black",
+  "size": "M"
+}
+```
+
+### Create Order Request
+
+```json
+POST /orders
+Authorization: Bearer <token>
+{
+  "street": "123 Main St",
+  "city": "New York",
+  "state": "NY",
+  "zipCode": "10001",
+  "country": "USA"
+}
+```
+
+## Database Schema
+
+### Tables
+
+- `users` - User accounts and profiles
+- `categories` - Product categories
+- `brands` - Product brands
+- `products` - Product catalog
+- `product_images` - Product image URLs
+- `product_colors` - Available colors
+- `product_sizes` - Available sizes
+- `carts` - User shopping carts
+- `cart_items` - Items in shopping carts
+- `orders` - Customer orders
+- `order_items` - Items in orders
+
+## Security
+
+The application uses JWT-based authentication with the following security features:
+
+- Password encryption using BCrypt
+- Role-based access control (CUSTOMER, ADMIN)
+- CORS configuration for frontend integration
+- Secure endpoints with proper authorization
 
 ## Error Handling
 
-The API provides consistent error responses with HTTP status codes and descriptive messages:
+The application includes comprehensive error handling:
 
-```json
-{
-  "message": "Error description"
-}
-```
-
-For validation errors, field-specific errors are returned:
-
-```json
-{
-  "email": "Email is required",
-  "password": "Password must be at least 6 characters"
-}
-```
+- `ResourceNotFoundException` - 404 for missing resources
+- `BadCredentialsException` - 401 for authentication failures
+- `MethodArgumentNotValidException` - 400 for validation errors
+- Generic exception handling for unexpected errors
 
 ## Development
 
 ### Running Tests
+
 ```bash
 mvn test
 ```
 
 ### Building for Production
+
 ```bash
 mvn clean package -Pprod
 ```
 
 ### Environment Variables
-Key configuration properties can be overridden with environment variables:
+
+For production deployment, set the following environment variables:
+
+- `SPRING_DATASOURCE_URL` - Database URL
 - `JWT_SECRET` - JWT signing secret
-- `JWT_EXPIRATION` - JWT token expiration time
-- `DB_URL` - Database URL
-- `DB_USERNAME` - Database username
-- `DB_PASSWORD` - Database password
+- `JWT_EXPIRATION` - Token expiration time
 
-## Architecture
+## Frontend Integration
 
-The backend follows a layered architecture:
+The backend is designed to work with the React frontend running on port 8080. CORS is configured to allow requests from:
 
-- **Controllers**: Handle HTTP requests and responses
-- **Services**: Contain business logic
-- **Repositories**: Data access layer
-- **Entities**: JPA entities representing database tables
-- **DTOs**: Data transfer objects for API communication
-- **Security**: JWT-based authentication and authorization
+- `http://localhost:3000` (development)
+- `http://localhost:8080` (production)
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Database Connection Failed**
+   - Verify Supabase credentials in `application.properties`
+   - Check network connectivity to Supabase
+
+2. **JWT Authentication Issues**
+   - Ensure the JWT secret is properly configured
+   - Check token expiration settings
+
+3. **Port Conflicts**
+   - Default port is 6969, change in `application.properties` if needed
+   - Ensure no other services are running on the same port
+
+### Logs
+
+Enable debug logging for troubleshooting:
+
+```properties
+logging.level.com.socksbox=DEBUG
+logging.level.org.springframework.security=DEBUG
+```
 
 ## Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Add tests if applicable
+4. Add tests for new functionality
 5. Submit a pull request
 
 ## License

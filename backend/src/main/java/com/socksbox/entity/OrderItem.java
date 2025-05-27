@@ -1,6 +1,7 @@
 
 package com.socksbox.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -21,6 +22,7 @@ public class OrderItem {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = false)
+    @JsonIgnore
     private Order order;
     
     @ManyToOne(fetch = FetchType.LAZY)
@@ -37,7 +39,6 @@ public class OrderItem {
     private Integer quantity;
     
     private String color;
-    
     private String size;
     
     @Column(name = "image_url")
