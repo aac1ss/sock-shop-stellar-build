@@ -20,6 +20,8 @@ import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController
+@RequestMapping("/orders")
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:8080"})
 public class OrderController {
 
     @Autowired
@@ -28,21 +30,19 @@ public class OrderController {
     @Autowired
     private UserService userService;
 
-    // Customer endpoints
-    @GetMapping("/orders")
+    @GetMapping
     public ResponseEntity<List<OrderDto>> getUserOrders(@AuthenticationPrincipal UserDetails userDetails) {
         String email = userDetails.getUsername();
         Long userId = userService.getUserByEmail(email).getId();
         return ResponseEntity.ok(orderService.getOrdersByUserId(userId));
     }
 
-    @GetMapping("/orders/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<OrderDto> getOrderById(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable Long id) {
         OrderDto order = orderService.getOrderById(id);
         
-        // Check if order belongs to current user or user is admin
         String email = userDetails.getUsername();
         Long userId = userService.getUserByEmail(email).getId();
         boolean isAdmin = userDetails.getAuthorities().stream()
@@ -55,7 +55,7 @@ public class OrderController {
         return ResponseEntity.ok(order);
     }
 
-    @PostMapping("/orders")
+    @PostMapping
     public ResponseEntity<OrderDto> createOrder(
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody CreateOrderRequestDto createOrderRequest) {
@@ -72,21 +72,5 @@ public class OrderController {
         
         OrderDto createdOrder = orderService.createOrderFromCart(userId, shippingAddress);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdOrder);
-    }
-
-    // Admin endpoints
-    @GetMapping("/admin/orders")
-    @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<List<OrderDto>> getAllOrders() {
-        return ResponseEntity.ok(orderService.getAllOrders());
-    }
-
-    @PutMapping("/admin/orders/{id}/status")
-    @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<OrderDto> updateOrderStatus(
-            @PathVariable Long id,
-            @Valid @RequestBody UpdateOrderStatusDto statusDto) {
-        OrderDto updatedOrder = orderService.updateOrderStatus(id, Order.Status.valueOf(statusDto.getStatus()));
-        return ResponseEntity.ok(updatedOrder);
     }
 }

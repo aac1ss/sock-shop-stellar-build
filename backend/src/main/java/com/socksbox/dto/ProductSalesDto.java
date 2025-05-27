@@ -13,6 +13,6 @@ import java.math.BigDecimal;
 public class ProductSalesDto {
     private Long productId;
     private String productName;
-    private Integer totalQuantitySold;
-    private BigDecimal totalRevenue;
+    private Integer totalQuantitySold = 0;
+    private BigDecimal totalSalesAmount = BigDecimal.ZERO;
 }

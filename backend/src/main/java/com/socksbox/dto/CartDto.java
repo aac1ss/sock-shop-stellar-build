@@ -16,5 +16,5 @@ public class CartDto {
     private Long id;
     private Long userId;
     private List<CartItemDto> items = new ArrayList<>();
-    private BigDecimal totalAmount;
+    private BigDecimal totalAmount = BigDecimal.ZERO;
 }

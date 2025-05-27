@@ -30,7 +30,10 @@ public class ProductDto {
     private Long categoryId;
     private String categoryName;
     
-    private Integer inventory;
+    private Long brandId;
+    private String brandName;
+    
+    private Integer inventory = 0;
     
     private Boolean featured = false;
     
@@ -39,9 +42,6 @@ public class ProductDto {
     
     private List<String> colors = new ArrayList<>();
     private List<String> sizes = new ArrayList<>();
-    
-    private Long brandId;
-    private String brandName;
     
     private Boolean inStock;
 }

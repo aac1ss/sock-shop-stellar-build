@@ -13,7 +13,8 @@ import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/products")
+@RequestMapping("/products")
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:8080"})
 public class ProductController {
 
     @Autowired
@@ -26,12 +27,10 @@ public class ProductController {
             @RequestParam(required = false) Double minPrice,
             @RequestParam(required = false) Double maxPrice) {
         
-        // If no filters are applied, return all products
         if (categoryId == null && brandId == null && minPrice == null && maxPrice == null) {
             return ResponseEntity.ok(productService.getAllProducts());
         }
         
-        // Apply filters
         List<ProductDto> filteredProducts = productService.getProductsByFilters(categoryId, brandId, minPrice, maxPrice);
         return ResponseEntity.ok(filteredProducts);
     }

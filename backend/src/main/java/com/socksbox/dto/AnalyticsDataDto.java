@@ -12,9 +12,16 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AnalyticsDataDto {
-    private BigDecimal totalSales;
-    private Long totalOrders;
-    private Long totalCustomers;
-    private Map<String, BigDecimal> monthlySales;
-    private Map<String, Long> ordersByStatus;
+    private BigDecimal totalSales = BigDecimal.ZERO;
+    private BigDecimal dailySales = BigDecimal.ZERO;
+    private BigDecimal weeklySales = BigDecimal.ZERO;
+    private BigDecimal monthlySales = BigDecimal.ZERO;
+    
+    private Long pendingOrders = 0L;
+    private Long processingOrders = 0L;
+    private Long shippedOrders = 0L;
+    private Long deliveredOrders = 0L;
+    private Long cancelledOrders = 0L;
+    
+    private Map<String, BigDecimal> salesByMonth;
 }

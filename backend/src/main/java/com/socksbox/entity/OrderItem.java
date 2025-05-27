@@ -14,27 +14,32 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class OrderItem {
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @ManyToOne
-    @JoinColumn(name = "order_id")
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id", nullable = false)
     private Order order;
-
-    @ManyToOne
-    @JoinColumn(name = "product_id")
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id", nullable = false)
     private Product product;
-
+    
+    @Column(nullable = false)
     private String name;
-
+    
+    @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
-
+    
+    @Column(nullable = false)
     private Integer quantity;
-
+    
     private String color;
-
+    
     private String size;
-
+    
+    @Column(name = "image_url")
     private String imageUrl;
 }

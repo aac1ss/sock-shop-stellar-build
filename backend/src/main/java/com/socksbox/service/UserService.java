@@ -28,8 +28,7 @@ public class UserService {
     private PasswordEncoder passwordEncoder;
 
     public List<UserDto> getAllCustomers() {
-        return userRepository.findAll().stream()
-                .filter(user -> user.getRole() == User.Role.CUSTOMER)
+        return userRepository.findByRole(User.Role.CUSTOMER).stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
@@ -49,7 +48,7 @@ public class UserService {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with email " + email));
     }
-    
+
     public UserDto getUserDtoByEmail(String email) {
         User user = getUserByEmail(email);
         return convertToDto(user);

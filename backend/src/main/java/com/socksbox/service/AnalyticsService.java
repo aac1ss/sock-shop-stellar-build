@@ -4,7 +4,7 @@ package com.socksbox.service;
 import com.socksbox.dto.AnalyticsDataDto;
 import com.socksbox.dto.ProductSalesDto;
 import com.socksbox.entity.Order;
-import com.socksbox.repository.OrderItemRepository;
+import com.socksbox.entity.OrderItem;
 import com.socksbox.repository.OrderRepository;
 import com.socksbox.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,9 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.time.Month;
-import java.time.YearMonth;
-import java.time.format.TextStyle;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -23,93 +21,102 @@ public class AnalyticsService {
 
     @Autowired
     private OrderRepository orderRepository;
-    
-    @Autowired
-    private OrderItemRepository orderItemRepository;
-    
+
     @Autowired
     private UserRepository userRepository;
 
     public AnalyticsDataDto getSalesData() {
-        AnalyticsDataDto analyticsData = new AnalyticsDataDto();
+        AnalyticsDataDto data = new AnalyticsDataDto();
         
-        // Get total sales
-        Double totalSales = orderRepository.getTotalSales();
-        analyticsData.setTotalSales(totalSales != null ? BigDecimal.valueOf(totalSales) : BigDecimal.ZERO);
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startOfDay = now.truncatedTo(ChronoUnit.DAYS);
+        LocalDateTime startOfWeek = now.minusDays(now.getDayOfWeek().getValue() - 1).truncatedTo(ChronoUnit.DAYS);
+        LocalDateTime startOfMonth = now.withDayOfMonth(1).truncatedTo(ChronoUnit.DAYS);
         
-        // Get total orders
-        Long totalOrders = orderRepository.count();
-        analyticsData.setTotalOrders(totalOrders);
+        // Total Sales
+        BigDecimal totalSales = orderRepository.getTotalSales();
+        data.setTotalSales(totalSales != null ? totalSales : BigDecimal.ZERO);
         
-        // Get total customers
-        Long totalCustomers = userRepository.count();
-        analyticsData.setTotalCustomers(totalCustomers);
+        // Daily Sales
+        BigDecimal dailySales = orderRepository.getSalesBetween(startOfDay, now);
+        data.setDailySales(dailySales != null ? dailySales : BigDecimal.ZERO);
         
-        // Get monthly sales for the current year
-        Map<String, BigDecimal> monthlySales = new LinkedHashMap<>();
-        int currentYear = YearMonth.now().getYear();
+        // Weekly Sales
+        BigDecimal weeklySales = orderRepository.getSalesBetween(startOfWeek, now);
+        data.setWeeklySales(weeklySales != null ? weeklySales : BigDecimal.ZERO);
         
-        // Initialize all months with zero
-        for (Month month : Month.values()) {
-            monthlySales.put(month.getDisplayName(TextStyle.SHORT, Locale.ENGLISH), BigDecimal.ZERO);
-        }
+        // Monthly Sales
+        BigDecimal monthlySales = orderRepository.getSalesBetween(startOfMonth, now);
+        data.setMonthlySales(monthlySales != null ? monthlySales : BigDecimal.ZERO);
         
-        // Get actual sales data for each month
-        for (Month month : Month.values()) {
-            LocalDateTime startOfMonth = LocalDateTime.of(currentYear, month, 1, 0, 0);
-            LocalDateTime endOfMonth = startOfMonth.plusMonths(1).minusNanos(1);
+        // Order Counts
+        data.setPendingOrders(orderRepository.countByStatus(Order.Status.PENDING));
+        data.setProcessingOrders(orderRepository.countByStatus(Order.Status.PROCESSING));
+        data.setShippedOrders(orderRepository.countByStatus(Order.Status.SHIPPED));
+        data.setDeliveredOrders(orderRepository.countByStatus(Order.Status.DELIVERED));
+        data.setCancelledOrders(orderRepository.countByStatus(Order.Status.CANCELLED));
+        
+        // Sales by Month
+        Map<String, BigDecimal> salesByMonth = new LinkedHashMap<>();
+        for (int i = 5; i >= 0; i--) {
+            LocalDateTime monthStart = now.minusMonths(i).withDayOfMonth(1).truncatedTo(ChronoUnit.DAYS);
+            LocalDateTime monthEnd = monthStart.plusMonths(1);
+            String monthKey = monthStart.getMonth().toString() + " " + monthStart.getYear();
             
-            Double monthSales = orderRepository.getSalesBetween(startOfMonth, endOfMonth);
-            if (monthSales != null) {
-                monthlySales.put(month.getDisplayName(TextStyle.SHORT, Locale.ENGLISH), BigDecimal.valueOf(monthSales));
-            }
+            BigDecimal monthSales = orderRepository.getSalesBetween(monthStart, monthEnd);
+            salesByMonth.put(monthKey, monthSales != null ? monthSales : BigDecimal.ZERO);
         }
-        analyticsData.setMonthlySales(monthlySales);
+        data.setSalesByMonth(salesByMonth);
         
-        // Get orders by status
-        Map<String, Long> ordersByStatus = new HashMap<>();
-        for (Order.Status status : Order.Status.values()) {
-            Long count = orderRepository.countByStatus(status);
-            ordersByStatus.put(status.name(), count);
-        }
-        analyticsData.setOrdersByStatus(ordersByStatus);
-        
-        return analyticsData;
+        return data;
     }
 
     public List<ProductSalesDto> getProductPerformanceData() {
-        List<Object[]> topProducts = orderItemRepository.findTopSellingProducts();
+        List<Order> completedOrders = orderRepository.findAll().stream()
+                .filter(order -> order.getStatus() != Order.Status.CANCELLED)
+                .collect(Collectors.toList());
         
-        return topProducts.stream().map(data -> {
-            ProductSalesDto productSales = new ProductSalesDto();
-            productSales.setProductId((Long) data[0]);
-            productSales.setProductName((String) data[1]);
-            productSales.setTotalQuantitySold(((Number) data[2]).intValue());
-            productSales.setTotalRevenue(BigDecimal.valueOf(((Number) data[3]).doubleValue()));
-            return productSales;
-        }).collect(Collectors.toList());
+        Map<Long, ProductSalesDto> productSalesMap = new HashMap<>();
+        
+        for (Order order : completedOrders) {
+            for (OrderItem item : order.getItems()) {
+                Long productId = item.getProduct().getId();
+                
+                ProductSalesDto productSales = productSalesMap.getOrDefault(productId, new ProductSalesDto());
+                productSales.setProductId(productId);
+                productSales.setProductName(item.getName());
+                
+                int quantity = item.getQuantity();
+                BigDecimal salesAmount = item.getPrice().multiply(BigDecimal.valueOf(quantity));
+                
+                productSales.setTotalQuantitySold(productSales.getTotalQuantitySold() + quantity);
+                productSales.setTotalSalesAmount(productSales.getTotalSalesAmount().add(salesAmount));
+                
+                productSalesMap.put(productId, productSales);
+            }
+        }
+        
+        return new ArrayList<>(productSalesMap.values())
+                .stream()
+                .sorted((a, b) -> b.getTotalSalesAmount().compareTo(a.getTotalSalesAmount()))
+                .collect(Collectors.toList());
     }
 
     public Map<String, Long> getCustomerAcquisitionData() {
-        // In a real application, you would query user registration data by month
-        // For this example, we'll return dummy data
         Map<String, Long> acquisitionData = new LinkedHashMap<>();
         
-        // Get current year
-        int currentYear = YearMonth.now().getYear();
-        
-        // Initialize all months with zero
-        for (Month month : Month.values()) {
-            acquisitionData.put(month.getDisplayName(TextStyle.SHORT, Locale.ENGLISH), 0L);
+        LocalDateTime now = LocalDateTime.now();
+        for (int i = 5; i >= 0; i--) {
+            LocalDateTime monthStart = now.minusMonths(i).withDayOfMonth(1).truncatedTo(ChronoUnit.DAYS);
+            LocalDateTime monthEnd = monthStart.plusMonths(1);
+            String monthKey = monthStart.getMonth().toString() + " " + monthStart.getYear();
+            
+            long customerCount = userRepository.findAll().stream()
+                    .filter(user -> user.getCreatedAt().isAfter(monthStart) && user.getCreatedAt().isBefore(monthEnd))
+                    .count();
+                    
+            acquisitionData.put(monthKey, customerCount);
         }
-        
-        // Add dummy data (in a real app, this would be actual user registration data)
-        acquisitionData.put("Jan", 15L);
-        acquisitionData.put("Feb", 21L);
-        acquisitionData.put("Mar", 35L);
-        acquisitionData.put("Apr", 28L);
-        acquisitionData.put("May", 42L);
-        acquisitionData.put("Jun", 55L);
         
         return acquisitionData;
     }

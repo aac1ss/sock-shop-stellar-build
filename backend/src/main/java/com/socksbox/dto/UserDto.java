@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 @Data
 @NoArgsConstructor
@@ -21,6 +22,7 @@ public class UserDto {
     @Email(message = "Invalid email format")
     private String email;
     
+    @Size(min = 6, message = "Password must be at least 6 characters")
     private String password;
     
     private String role;

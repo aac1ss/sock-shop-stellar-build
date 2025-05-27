@@ -13,7 +13,8 @@ import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/categories")
+@RequestMapping("/categories")
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:8080"})
 public class CategoryController {
 
     @Autowired
