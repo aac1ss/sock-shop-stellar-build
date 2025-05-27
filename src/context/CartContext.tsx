@@ -1,16 +1,26 @@
 
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
-import { CartItem, Product } from '../types';
 import { useToast } from '@/hooks/use-toast';
 import axios from 'axios';
 import { useAuth } from './AuthContext';
 
+interface CartItem {
+  id?: number;
+  productId: number;
+  quantity: number;
+  color: string;
+  size: string;
+  productName?: string;
+  price?: number;
+  imageUrl?: string;
+}
+
 interface CartContextType {
   cart: CartItem[];
-  addToCart: (productId: string, quantity: number, color: string, size: string) => void;
-  removeFromCart: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
-  clearCart: () => void;
+  addToCart: (productId: number, quantity: number, color: string, size: string) => Promise<void>;
+  removeFromCart: (itemId: number) => Promise<void>;
+  updateQuantity: (itemId: number, quantity: number) => Promise<void>;
+  clearCart: () => Promise<void>;
   getCartTotal: () => number;
   getCartItemCount: () => number;
   isSyncing: boolean;
@@ -20,86 +30,23 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
   const [isSyncing, setIsSyncing] = useState(false);
   const { toast } = useToast();
-  const { isAuthenticated, user } = useAuth();
-  
-  // Load products once on component mount
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const response = await axios.get('/products');
-        setProducts(response.data);
-      } catch (error) {
-        console.error('Failed to fetch products:', error);
-      }
-    };
-    
-    fetchProducts();
-  }, []);
+  const { isAuthenticated } = useAuth();
 
-  // Sync with backend when authenticated
-  useEffect(() => {
-    const fetchCart = async () => {
-      if (!isAuthenticated) {
-        // Load from localStorage if not authenticated
-        const savedCart = localStorage.getItem('cart');
-        if (savedCart) {
-          setCart(JSON.parse(savedCart));
-        }
-        return;
-      }
-      
-      setIsSyncing(true);
-      try {
-        const response = await axios.get('/cart');
-        // Transform backend cart items to frontend format
-        const cartItems = response.data.items.map((item: any) => ({
-          productId: item.productId,
-          quantity: item.quantity,
-          color: item.color || 'default',
-          size: item.size || 'M'
-        }));
-        setCart(cartItems);
-      } catch (error) {
-        console.error('Failed to fetch cart:', error);
-        // Fallback to localStorage
-        const savedCart = localStorage.getItem('cart');
-        if (savedCart) {
-          setCart(JSON.parse(savedCart));
-        }
-      } finally {
-        setIsSyncing(false);
-      }
-    };
-    
-    fetchCart();
-  }, [isAuthenticated]);
-
-  // Save cart to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(cart));
-  }, [cart]);
-
-  const syncWithBackend = async (newCart: CartItem[]) => {
+  // Fetch cart from backend
+  const fetchCart = async () => {
     if (!isAuthenticated) return;
     
-    setIsSyncing(true);
     try {
-      await axios.put('/cart', {
-        items: newCart.map(item => ({
-          productId: item.productId,
-          quantity: item.quantity,
-          color: item.color,
-          size: item.size
-        }))
-      });
+      setIsSyncing(true);
+      const response = await axios.get('/cart');
+      setCart(response.data.items || []);
     } catch (error) {
-      console.error('Failed to sync cart with backend:', error);
+      console.error('Failed to fetch cart:', error);
       toast({
         title: "Cart sync failed",
-        description: "We couldn't update your cart on the server. Your changes are saved locally.",
+        description: "We couldn't load your cart from the server.",
         variant: "destructive",
       });
     } finally {
@@ -107,62 +54,113 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const addToCart = (productId: string, quantity: number, color: string, size: string) => {
-    const existingItemIndex = cart.findIndex(
-      item => item.productId === productId && item.color === color && item.size === size
-    );
+  useEffect(() => {
+    fetchCart();
+  }, [isAuthenticated]);
 
-    let newCart: CartItem[];
-    if (existingItemIndex >= 0) {
-      // Update quantity if item exists
-      newCart = [...cart];
-      newCart[existingItemIndex].quantity += quantity;
-    } else {
-      // Add new item
-      newCart = [...cart, { productId, quantity, color, size }];
+  const addToCart = async (productId: number, quantity: number, color: string, size: string) => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Please log in",
+        description: "You need to be logged in to add items to cart.",
+        variant: "destructive",
+      });
+      return;
     }
-    
-    setCart(newCart);
-    syncWithBackend(newCart);
-    
-    // Show notification
-    const product = products.find(p => p.id === productId);
-    toast({
-      title: "Added to cart",
-      description: `${quantity} x ${product?.name || 'Product'} added to your cart`,
-    });
+
+    try {
+      setIsSyncing(true);
+      const response = await axios.post('/cart', {
+        productId,
+        quantity,
+        color,
+        size
+      });
+      setCart(response.data.items || []);
+      toast({
+        title: "Added to cart",
+        description: `${quantity} item(s) added to your cart`,
+      });
+    } catch (error: any) {
+      console.error('Failed to add to cart:', error);
+      toast({
+        title: "Failed to add to cart",
+        description: error.response?.data?.message || "There was an error adding the item to your cart.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
-  const removeFromCart = (productId: string) => {
-    const newCart = cart.filter(item => item.productId !== productId);
-    setCart(newCart);
-    syncWithBackend(newCart);
+  const removeFromCart = async (itemId: number) => {
+    if (!isAuthenticated) return;
+
+    try {
+      setIsSyncing(true);
+      const response = await axios.delete(`/cart/items/${itemId}`);
+      setCart(response.data.items || []);
+      toast({
+        title: "Item removed",
+        description: "Item removed from your cart",
+      });
+    } catch (error: any) {
+      console.error('Failed to remove from cart:', error);
+      toast({
+        title: "Failed to remove item",
+        description: error.response?.data?.message || "There was an error removing the item.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
-  const updateQuantity = (productId: string, quantity: number) => {
-    const newCart = cart.map(item => {
-      if (item.productId === productId) {
-        return { ...item, quantity };
-      }
-      return item;
-    });
-    setCart(newCart);
-    syncWithBackend(newCart);
+  const updateQuantity = async (itemId: number, quantity: number) => {
+    if (!isAuthenticated) return;
+
+    try {
+      setIsSyncing(true);
+      const response = await axios.put(`/cart/items/${itemId}`, { quantity });
+      setCart(response.data.items || []);
+    } catch (error: any) {
+      console.error('Failed to update quantity:', error);
+      toast({
+        title: "Failed to update quantity",
+        description: error.response?.data?.message || "There was an error updating the quantity.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
-  const clearCart = () => {
-    setCart([]);
-    syncWithBackend([]);
-    toast({
-      title: "Cart cleared",
-      description: "Your cart has been emptied.",
-    });
+  const clearCart = async () => {
+    if (!isAuthenticated) return;
+
+    try {
+      setIsSyncing(true);
+      await axios.delete('/cart');
+      setCart([]);
+      toast({
+        title: "Cart cleared",
+        description: "Your cart has been emptied.",
+      });
+    } catch (error: any) {
+      console.error('Failed to clear cart:', error);
+      toast({
+        title: "Failed to clear cart",
+        description: error.response?.data?.message || "There was an error clearing your cart.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   const getCartTotal = () => {
     return cart.reduce((total, item) => {
-      const product = products.find(p => p.id === item.productId);
-      return total + (product?.price || 0) * item.quantity;
+      return total + ((item.price || 0) * item.quantity);
     }, 0);
   };
 

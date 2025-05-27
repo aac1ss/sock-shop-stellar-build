@@ -2,26 +2,42 @@
 import React from 'react';
 import { X, Plus, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { CartItem as CartItemType } from '@/types';
 import { useCart } from '@/context/CartContext';
-import { products } from '@/data/products';
 
 interface CartItemProps {
-  item: CartItemType;
+  item: {
+    id?: number;
+    productId: number;
+    quantity: number;
+    color: string;
+    size: string;
+    productName?: string;
+    price?: number;
+    imageUrl?: string;
+  };
 }
 
 const CartItem: React.FC<CartItemProps> = ({ item }) => {
   const { updateQuantity, removeFromCart } = useCart();
-  const product = products.find(p => p.id === item.productId);
 
-  if (!product) return null;
+  const handleUpdateQuantity = (newQuantity: number) => {
+    if (item.id && newQuantity > 0) {
+      updateQuantity(item.id, newQuantity);
+    }
+  };
+
+  const handleRemove = () => {
+    if (item.id) {
+      removeFromCart(item.id);
+    }
+  };
 
   return (
     <div className="flex items-center py-4 border-b border-gray-200">
       <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-md">
         <img
-          src={product.imageUrl || (product.images && product.images[0])}
-          alt={product.name}
+          src={item.imageUrl || '/placeholder.svg'}
+          alt={item.productName || 'Product'}
           className="h-full w-full object-cover object-center"
         />
       </div>
@@ -29,8 +45,8 @@ const CartItem: React.FC<CartItemProps> = ({ item }) => {
       <div className="ml-4 flex flex-1 flex-col">
         <div>
           <div className="flex justify-between text-base font-medium text-gray-900">
-            <h3>{product.name}</h3>
-            <p className="ml-4">${(product.price * item.quantity).toFixed(2)}</p>
+            <h3>{item.productName}</h3>
+            <p className="ml-4">${((item.price || 0) * item.quantity).toFixed(2)}</p>
           </div>
           <div className="flex mt-1">
             <p className="text-sm text-gray-500">Color: {item.color}</p>
@@ -44,7 +60,7 @@ const CartItem: React.FC<CartItemProps> = ({ item }) => {
               variant="ghost"
               size="icon"
               className="h-8 w-8"
-              onClick={() => item.quantity > 1 && updateQuantity(product.id, item.quantity - 1)}
+              onClick={() => handleUpdateQuantity(item.quantity - 1)}
               disabled={item.quantity <= 1}
             >
               <Minus className="h-3 w-3" />
@@ -55,7 +71,7 @@ const CartItem: React.FC<CartItemProps> = ({ item }) => {
               variant="ghost"
               size="icon"
               className="h-8 w-8"
-              onClick={() => updateQuantity(product.id, item.quantity + 1)}
+              onClick={() => handleUpdateQuantity(item.quantity + 1)}
             >
               <Plus className="h-3 w-3" />
             </Button>
@@ -64,7 +80,7 @@ const CartItem: React.FC<CartItemProps> = ({ item }) => {
             <button
               type="button"
               className="font-medium text-secondary hover:text-secondary/80"
-              onClick={() => removeFromCart(product.id)}
+              onClick={handleRemove}
             >
               <X className="h-5 w-5" />
             </button>

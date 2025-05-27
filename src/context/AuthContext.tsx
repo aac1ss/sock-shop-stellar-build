@@ -10,24 +10,21 @@ type AuthContextType = {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  register: (userData: any) => Promise<void>;
   logout: () => void;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Set the base URL for API requests
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:6969/api';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  // Set up axios defaults
   axios.defaults.baseURL = API_URL;
   
-  // Set up axios interceptor to add the token to every request
   axios.interceptors.request.use(
     (config) => {
       const token = localStorage.getItem('token');
@@ -84,11 +81,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const register = async (name: string, email: string, password: string) => {
+  const register = async (userData: any) => {
     setIsLoading(true);
     try {
-      console.log("Registering user:", { name, email, password });
-      const response = await authAPI.register(name, email, password);
+      console.log("Registering user:", userData);
+      const response = await authAPI.register(userData);
       console.log("Registration response:", response.data);
       
       const { token, user } = response.data;
@@ -97,7 +94,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       toast({
         title: "Registration successful",
-        description: `Welcome to The Socks Box, ${name}!`,
+        description: `Welcome to The Socks Box, ${userData.name}!`,
       });
       
     } catch (error: any) {
