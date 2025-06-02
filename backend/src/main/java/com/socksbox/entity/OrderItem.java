@@ -40,7 +40,5 @@ public class OrderItem {
     
     private String color;
     private String size;
-    
-    @Column(name = "image_url")
     private String imageUrl;
 }

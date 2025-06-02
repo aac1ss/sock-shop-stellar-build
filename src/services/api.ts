@@ -143,6 +143,31 @@ export const ordersAPI = {
     api.put(`/orders/${id}/status`, { status }),
 };
 
+export const paymentAPI = {
+  initiate: (paymentData: any) =>
+    api.post('/payments/initiate', paymentData),
+
+  verify: (params: any) =>
+    api.get('/payments/verify', { params }),
+};
+
+export const companyAPI = {
+  register: (companyData: any) =>
+    api.post('/companies/register', companyData),
+
+  getMyCompany: () =>
+    api.get('/companies/my-company'),
+
+  getAll: () =>
+    api.get('/companies'),
+
+  approve: (id: string) =>
+    api.put(`/companies/${id}/approve`),
+
+  reject: (id: string) =>
+    api.put(`/companies/${id}/reject`),
+};
+
 export const adminAPI = {
   getAnalytics: () =>
     api.get('/admin/analytics'),

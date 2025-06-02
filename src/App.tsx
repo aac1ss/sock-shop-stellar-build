@@ -17,6 +17,9 @@ import Home from "./pages/Home";
 import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
+import Checkout from "./pages/Checkout";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentFailure from "./pages/PaymentFailure";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
@@ -56,6 +59,10 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/user-type-selection" element={<UserTypeSelection />} />
+              
+              {/* Payment Routes */}
+              <Route path="/payment/success" element={<PaymentSuccess />} />
+              <Route path="/payment/failure" element={<PaymentFailure />} />
               
               {/* Admin Routes */}
               <Route path="/admin" element={
@@ -158,6 +165,13 @@ function App() {
                 <Layout>
                   <Cart />
                 </Layout>
+              } />
+              <Route path="/checkout" element={
+                <ProtectedRoute allowedRole="customer">
+                  <Layout>
+                    <Checkout />
+                  </Layout>
+                </ProtectedRoute>
               } />
               <Route path="/categories" element={
                 <Layout>
