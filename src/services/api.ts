@@ -1,182 +1,69 @@
 
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:6969/api';
-
-console.log('API URL:', API_URL);
-
+// Create axios instance with base configuration
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: 'http://localhost:8080/api',
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: false,
 });
 
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    console.log('API Request:', config.method, config.url, config.data);
-    return config;
-  },
-  (error) => {
-    console.error('API Request Error:', error);
-    return Promise.reject(error);
+// Add token to requests if available
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
-);
+  return config;
+});
 
-api.interceptors.response.use(
-  (response) => {
-    console.log('API Response:', response.status, response.data);
-    return response;
-  },
-  (error) => {
-    console.error('API Response Error:', error.response?.status, error.response?.data || error.message);
-    
-    const { status } = error.response || {};
-    
-    if (status === 401) {
-      localStorage.removeItem('token');
-      window.location.href = '/login';
-    }
-    
-    return Promise.reject(error);
-  }
-);
-
-export const authAPI = {
-  login: (email: string, password: string) => 
-    api.post('/auth/login', { email, password }),
-  
-  register: (userData: any) => 
-    api.post('/auth/register', userData),
-  
-  getCurrentUser: () => 
-    api.get('/auth/user'),
-};
-
+// Products API
 export const productsAPI = {
-  getAll: (params?: any) => 
-    api.get('/products', { params }),
-  
-  getById: (id: string) => 
-    api.get(`/products/${id}`),
-    
-  getByCategory: (categoryId: string) => 
-    api.get(`/products/category/${categoryId}`),
-
-  create: (productData: any) =>
-    api.post('/products', productData),
-
-  update: (id: string, productData: any) =>
-    api.put(`/products/${id}`, productData),
-
-  delete: (id: string) =>
-    api.delete(`/products/${id}`),
+  getAll: () => api.get('/products'),
+  getById: (id: string) => api.get(`/products/${id}`),
+  getFeatured: () => api.get('/products/featured'),
+  getByCategory: (categoryId: string) => api.get(`/products/category/${categoryId}`),
+  getByBrand: (brandId: string) => api.get(`/products/brand/${brandId}`),
+  create: (product: any) => api.post('/products', product),
+  update: (id: string, product: any) => api.put(`/products/${id}`, product),
+  delete: (id: string) => api.delete(`/products/${id}`),
 };
 
-export const categoriesAPI = {
-  getAll: () => 
-    api.get('/categories'),
-  
-  getById: (id: string) => 
-    api.get(`/categories/${id}`),
-
-  create: (categoryData: any) =>
-    api.post('/categories', categoryData),
-
-  update: (id: string, categoryData: any) =>
-    api.put(`/categories/${id}`, categoryData),
-
-  delete: (id: string) =>
-    api.delete(`/categories/${id}`),
-};
-
-export const brandsAPI = {
-  getAll: () => 
-    api.get('/brands'),
-  
-  getById: (id: string) => 
-    api.get(`/brands/${id}`),
-
-  create: (brandData: any) =>
-    api.post('/brands', brandData),
-
-  update: (id: string, brandData: any) =>
-    api.put(`/brands/${id}`, brandData),
-
-  delete: (id: string) =>
-    api.delete(`/brands/${id}`),
-};
-
-export const cartAPI = {
-  getCart: () =>
-    api.get('/cart'),
-
-  addItem: (item: any) =>
-    api.post('/cart', item),
-
-  updateItem: (itemId: string, data: any) =>
-    api.put(`/cart/items/${itemId}`, data),
-
-  removeItem: (itemId: string) =>
-    api.delete(`/cart/items/${itemId}`),
-
-  clearCart: () =>
-    api.delete('/cart'),
-};
-
+// Orders API
 export const ordersAPI = {
-  getAll: () =>
-    api.get('/orders'),
-
-  getById: (id: string) =>
-    api.get(`/orders/${id}`),
-
-  create: (orderData: any) =>
-    api.post('/orders', orderData),
-
-  updateStatus: (id: string, status: string) =>
-    api.put(`/orders/${id}/status`, { status }),
+  getAll: () => api.get('/orders'),
+  getById: (id: string) => api.get(`/orders/${id}`),
+  create: (order: any) => api.post('/orders', order),
+  update: (id: string, order: any) => api.put(`/orders/${id}`, order),
+  delete: (id: string) => api.delete(`/orders/${id}`),
 };
 
-export const paymentAPI = {
-  initiate: (paymentData: any) =>
-    api.post('/payments/initiate', paymentData),
-
-  verify: (params: any) =>
-    api.get('/payments/verify', { params }),
+// Cart API
+export const cartAPI = {
+  get: () => api.get('/cart'),
+  addItem: (item: any) => api.post('/cart', item),
+  updateItem: (itemId: string, quantity: number) => api.put(`/cart/items/${itemId}`, { quantity }),
+  removeItem: (itemId: string) => api.delete(`/cart/items/${itemId}`),
+  clear: () => api.delete('/cart'),
 };
 
-export const companyAPI = {
-  register: (companyData: any) =>
-    api.post('/companies/register', companyData),
-
-  getMyCompany: () =>
-    api.get('/companies/my-company'),
-
-  getAll: () =>
-    api.get('/companies'),
-
-  approve: (id: string) =>
-    api.put(`/companies/${id}/approve`),
-
-  reject: (id: string) =>
-    api.put(`/companies/${id}/reject`),
+// Categories API
+export const categoriesAPI = {
+  getAll: () => api.get('/categories'),
+  getById: (id: string) => api.get(`/categories/${id}`),
+  create: (category: any) => api.post('/categories', category),
+  update: (id: string, category: any) => api.put(`/categories/${id}`, category),
+  delete: (id: string) => api.delete(`/categories/${id}`),
 };
 
-export const adminAPI = {
-  getAnalytics: () =>
-    api.get('/admin/analytics'),
-
-  getCustomers: () =>
-    api.get('/admin/customers'),
-
-  updateCustomer: (id: string, data: any) =>
-    api.put(`/admin/customers/${id}`, data),
+// Brands API
+export const brandsAPI = {
+  getAll: () => api.get('/brands'),
+  getById: (id: string) => api.get(`/brands/${id}`),
+  create: (brand: any) => api.post('/brands', brand),
+  update: (id: string, brand: any) => api.put(`/brands/${id}`, brand),
+  delete: (id: string) => api.delete(`/brands/${id}`),
 };
 
 export default api;

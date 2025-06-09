@@ -1,7 +1,7 @@
 
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import axios from 'axios';
+import { cartAPI } from '@/services/api';
 import { useAuth } from './AuthContext';
 
 interface CartItem {
@@ -40,22 +40,22 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     
     try {
       setIsSyncing(true);
-      const response = await axios.get('/cart');
+      const response = await cartAPI.get();
       setCart(response.data.items || []);
     } catch (error) {
       console.error('Failed to fetch cart:', error);
-      toast({
-        title: "Cart sync failed",
-        description: "We couldn't load your cart from the server.",
-        variant: "destructive",
-      });
+      // Don't show error toast for initial fetch failures
     } finally {
       setIsSyncing(false);
     }
   };
 
   useEffect(() => {
-    fetchCart();
+    if (isAuthenticated) {
+      fetchCart();
+    } else {
+      setCart([]);
+    }
   }, [isAuthenticated]);
 
   const addToCart = async (productId: number, quantity: number, color: string, size: string) => {
@@ -70,7 +70,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     try {
       setIsSyncing(true);
-      const response = await axios.post('/cart', {
+      const response = await cartAPI.addItem({
         productId,
         quantity,
         color,
@@ -98,7 +98,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     try {
       setIsSyncing(true);
-      const response = await axios.delete(`/cart/items/${itemId}`);
+      const response = await cartAPI.removeItem(itemId.toString());
       setCart(response.data.items || []);
       toast({
         title: "Item removed",
@@ -121,7 +121,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     try {
       setIsSyncing(true);
-      const response = await axios.put(`/cart/items/${itemId}`, { quantity });
+      const response = await cartAPI.updateItem(itemId.toString(), quantity);
       setCart(response.data.items || []);
     } catch (error: any) {
       console.error('Failed to update quantity:', error);
@@ -140,7 +140,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     try {
       setIsSyncing(true);
-      await axios.delete('/cart');
+      await cartAPI.clear();
       setCart([]);
       toast({
         title: "Cart cleared",

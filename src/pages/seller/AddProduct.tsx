@@ -1,44 +1,34 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { productsAPI, categoriesAPI, brandsAPI } from '@/services/api';
-import { Upload, X } from 'lucide-react';
-
-const productSchema = z.object({
-  name: z.string().min(2, 'Product name must be at least 2 characters'),
-  description: z.string().min(10, 'Description must be at least 10 characters'),
-  price: z.number().min(0.01, 'Price must be greater than 0'),
-  inventory: z.number().min(0, 'Inventory cannot be negative'),
-  categoryId: z.string().min(1, 'Please select a category'),
-  brandId: z.string().min(1, 'Please select a brand'),
-  featured: z.boolean().default(false),
-});
-
-type ProductFormData = z.infer<typeof productSchema>;
+import { useNavigate } from 'react-router-dom';
+import { Plus, Minus } from 'lucide-react';
 
 const AddProduct = () => {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
-  const [images, setImages] = useState<string[]>([]);
-  const [colors, setColors] = useState<string[]>(['']);
-  const [sizes, setSizes] = useState<string[]>(['']);
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
-  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<ProductFormData>({
-    resolver: zodResolver(productSchema),
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    price: '',
+    inventory: '',
+    categoryId: '',
+    brandId: '',
+    featured: false,
+    images: [''],
+    colors: [''],
+    sizes: ['']
   });
 
   useEffect(() => {
@@ -51,6 +41,7 @@ const AddProduct = () => {
         categoriesAPI.getAll(),
         brandsAPI.getAll()
       ]);
+      
       setCategories(categoriesRes.data);
       setBrands(brandsRes.data);
     } catch (error) {
@@ -62,237 +53,260 @@ const AddProduct = () => {
     }
   };
 
-  const handleAddColor = () => {
-    setColors([...colors, '']);
-  };
-
-  const handleColorChange = (index: number, value: string) => {
-    const newColors = [...colors];
-    newColors[index] = value;
-    setColors(newColors);
-  };
-
-  const handleRemoveColor = (index: number) => {
-    setColors(colors.filter((_, i) => i !== index));
-  };
-
-  const handleAddSize = () => {
-    setSizes([...sizes, '']);
-  };
-
-  const handleSizeChange = (index: number, value: string) => {
-    const newSizes = [...sizes];
-    newSizes[index] = value;
-    setSizes(newSizes);
-  };
-
-  const handleRemoveSize = (index: number) => {
-    setSizes(sizes.filter((_, i) => i !== index));
-  };
-
-  const onSubmit = async (data: ProductFormData) => {
-    setIsLoading(true);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    
     try {
       const productData = {
-        ...data,
-        images: images.filter(img => img.trim() !== ''),
-        colors: colors.filter(color => color.trim() !== ''),
-        sizes: sizes.filter(size => size.trim() !== ''),
+        ...formData,
+        price: parseFloat(formData.price),
+        inventory: parseInt(formData.inventory),
+        categoryId: parseInt(formData.categoryId),
+        brandId: parseInt(formData.brandId),
+        images: formData.images.filter(img => img.trim()),
+        colors: formData.colors.filter(color => color.trim()),
+        sizes: formData.sizes.filter(size => size.trim())
       };
 
       await productsAPI.create(productData);
       
       toast({
-        title: "Product added successfully",
-        description: "Your product is now available in the store!",
+        title: "Success",
+        description: "Product created successfully",
       });
       
       navigate('/seller/dashboard');
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to add product. Please try again.",
+        description: error.response?.data?.message || "Failed to create product",
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
+    }
+  };
+
+  const addArrayField = (field: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: [...prev[field], '']
+    }));
+  };
+
+  const updateArrayField = (field: string, index: number, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: prev[field].map((item, i) => i === index ? value : item)
+    }));
+  };
+
+  const removeArrayField = (field: string, index: number) => {
+    if (formData[field].length > 1) {
+      setFormData(prev => ({
+        ...prev,
+        [field]: prev[field].filter((_, i) => i !== index)
+      }));
     }
   };
 
   return (
     <div className="container mx-auto p-6">
-      <div className="max-w-4xl mx-auto">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl">Add New Product</CardTitle>
-            <CardDescription>
-              Create a new product listing for your store
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Product Name *</Label>
-                  <Input
-                    id="name"
-                    placeholder="Amazing Socks"
-                    {...register('name')}
-                  />
-                  {errors.name && (
-                    <p className="text-sm text-destructive">{errors.name.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="price">Price *</Label>
-                  <Input
-                    id="price"
-                    type="number"
-                    step="0.01"
-                    placeholder="19.99"
-                    {...register('price', { valueAsNumber: true })}
-                  />
-                  {errors.price && (
-                    <p className="text-sm text-destructive">{errors.price.message}</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description">Description *</Label>
-                <Textarea
-                  id="description"
-                  placeholder="Describe your product..."
-                  rows={4}
-                  {...register('description')}
+      <Card className="max-w-4xl mx-auto">
+        <CardHeader>
+          <CardTitle>Add New Product</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="name">Product Name</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  required
                 />
-                {errors.description && (
-                  <p className="text-sm text-destructive">{errors.description.message}</p>
-                )}
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="categoryId">Category *</Label>
-                  <Select onValueChange={(value) => setValue('categoryId', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((category: any) => (
-                        <SelectItem key={category.id} value={category.id.toString()}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.categoryId && (
-                    <p className="text-sm text-destructive">{errors.categoryId.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="brandId">Brand *</Label>
-                  <Select onValueChange={(value) => setValue('brandId', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select brand" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {brands.map((brand: any) => (
-                        <SelectItem key={brand.id} value={brand.id.toString()}>
-                          {brand.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.brandId && (
-                    <p className="text-sm text-destructive">{errors.brandId.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="inventory">Inventory *</Label>
-                  <Input
-                    id="inventory"
-                    type="number"
-                    placeholder="100"
-                    {...register('inventory', { valueAsNumber: true })}
-                  />
-                  {errors.inventory && (
-                    <p className="text-sm text-destructive">{errors.inventory.message}</p>
-                  )}
-                </div>
+              <div>
+                <Label htmlFor="price">Price (Rs.)</Label>
+                <Input
+                  id="price"
+                  type="number"
+                  step="0.01"
+                  value={formData.price}
+                  onChange={(e) => setFormData({...formData, price: e.target.value})}
+                  required
+                />
               </div>
+            </div>
 
+            <div>
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                rows={4}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="inventory">Stock Quantity</Label>
+                <Input
+                  id="inventory"
+                  type="number"
+                  value={formData.inventory}
+                  onChange={(e) => setFormData({...formData, inventory: e.target.value})}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="category">Category</Label>
+                <Select value={formData.categoryId} onValueChange={(value) => setFormData({...formData, categoryId: value})}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((category: any) => (
+                      <SelectItem key={category.id} value={category.id.toString()}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="brand">Brand</Label>
+                <Select value={formData.brandId} onValueChange={(value) => setFormData({...formData, brandId: value})}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select brand" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {brands.map((brand: any) => (
+                      <SelectItem key={brand.id} value={brand.id.toString()}>
+                        {brand.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Product Images */}
+            <div>
+              <Label>Product Images</Label>
               <div className="space-y-2">
-                <Label>Colors</Label>
-                {colors.map((color, index) => (
+                {formData.images.map((image, index) => (
                   <div key={index} className="flex gap-2">
                     <Input
-                      value={color}
-                      onChange={(e) => handleColorChange(index, e.target.value)}
-                      placeholder="Color name"
+                      placeholder="Image URL"
+                      value={image}
+                      onChange={(e) => updateArrayField('images', index, e.target.value)}
                     />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={() => handleRemoveColor(index)}
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => removeArrayField('images', index)}
+                      disabled={formData.images.length === 1}
                     >
-                      <X className="h-4 w-4" />
+                      <Minus className="h-4 w-4" />
                     </Button>
                   </div>
                 ))}
-                <Button type="button" variant="outline" onClick={handleAddColor}>
+                <Button type="button" variant="outline" size="sm" onClick={() => addArrayField('images')}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Image
+                </Button>
+              </div>
+            </div>
+
+            {/* Available Colors */}
+            <div>
+              <Label>Available Colors</Label>
+              <div className="space-y-2">
+                {formData.colors.map((color, index) => (
+                  <div key={index} className="flex gap-2">
+                    <Input
+                      placeholder="Color (e.g., Red, Blue, Black)"
+                      value={color}
+                      onChange={(e) => updateArrayField('colors', index, e.target.value)}
+                    />
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => removeArrayField('colors', index)}
+                      disabled={formData.colors.length === 1}
+                    >
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                <Button type="button" variant="outline" size="sm" onClick={() => addArrayField('colors')}>
+                  <Plus className="h-4 w-4 mr-2" />
                   Add Color
                 </Button>
               </div>
+            </div>
 
+            {/* Available Sizes */}
+            <div>
+              <Label>Available Sizes</Label>
               <div className="space-y-2">
-                <Label>Sizes</Label>
-                {sizes.map((size, index) => (
+                {formData.sizes.map((size, index) => (
                   <div key={index} className="flex gap-2">
                     <Input
+                      placeholder="Size (e.g., S, M, L, XL)"
                       value={size}
-                      onChange={(e) => handleSizeChange(index, e.target.value)}
-                      placeholder="Size (S, M, L, XL)"
+                      onChange={(e) => updateArrayField('sizes', index, e.target.value)}
                     />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={() => handleRemoveSize(index)}
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => removeArrayField('sizes', index)}
+                      disabled={formData.sizes.length === 1}
                     >
-                      <X className="h-4 w-4" />
+                      <Minus className="h-4 w-4" />
                     </Button>
                   </div>
                 ))}
-                <Button type="button" variant="outline" onClick={handleAddSize}>
+                <Button type="button" variant="outline" size="sm" onClick={() => addArrayField('sizes')}>
+                  <Plus className="h-4 w-4 mr-2" />
                   Add Size
                 </Button>
               </div>
+            </div>
 
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="featured"
-                  onCheckedChange={(checked) => setValue('featured', !!checked)}
-                />
-                <Label htmlFor="featured">Featured Product</Label>
-              </div>
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="featured"
+                checked={formData.featured}
+                onChange={(e) => setFormData({...formData, featured: e.target.checked})}
+              />
+              <Label htmlFor="featured">Featured Product</Label>
+            </div>
 
-              <div className="flex gap-4">
-                <Button type="submit" disabled={isLoading}>
-                  {isLoading ? 'Adding...' : 'Add Product'}
-                </Button>
-                <Button type="button" variant="outline" onClick={() => navigate('/seller/dashboard')}>
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
+            <div className="flex justify-end space-x-4">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => navigate('/seller/dashboard')}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={loading}>
+                {loading ? 'Creating...' : 'Create Product'}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 };

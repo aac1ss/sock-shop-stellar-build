@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -7,13 +7,15 @@ import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { nepalProvinces } from '@/data/nepalData';
 
 const step2Schema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters' }),
   phone: z.string().min(10, { message: 'Please enter a valid phone number' }),
   address: z.string().min(5, { message: 'Please enter your address' }),
-  city: z.string().min(2, { message: 'Please enter your city' }),
-  state: z.string().min(2, { message: 'Please enter your state' }),
+  city: z.string().min(2, { message: 'Please select your city' }),
+  state: z.string().min(2, { message: 'Please select your province' }),
   zipCode: z.string().min(5, { message: 'Please enter a valid zip code' }),
 });
 
@@ -26,9 +28,29 @@ interface RegistrationStep2Props {
 }
 
 const RegistrationStep2: React.FC<RegistrationStep2Props> = ({ onSubmit, onBack, isLoading }) => {
-  const { register, handleSubmit, formState: { errors } } = useForm<Step2Data>({
+  const [selectedProvince, setSelectedProvince] = useState<string>('');
+  const [availableCities, setAvailableCities] = useState<string[]>([]);
+
+  const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<Step2Data>({
     resolver: zodResolver(step2Schema),
   });
+
+  const handleProvinceChange = (province: string) => {
+    setSelectedProvince(province);
+    setValue('state', province);
+    setValue('city', ''); // Reset city when province changes
+    
+    const selectedProvinceData = nepalProvinces.find(p => p.name === province);
+    if (selectedProvinceData) {
+      setAvailableCities(selectedProvinceData.districts.map(d => d.name));
+    } else {
+      setAvailableCities([]);
+    }
+  };
+
+  const handleCityChange = (city: string) => {
+    setValue('city', city);
+  };
 
   return (
     <>
@@ -56,7 +78,7 @@ const RegistrationStep2: React.FC<RegistrationStep2Props> = ({ onSubmit, onBack,
           <Input
             id="phone"
             type="tel"
-            placeholder="+1 (555) 123-4567"
+            placeholder="+977 9812345678"
             {...register('phone')}
           />
           {errors.phone && (
@@ -69,7 +91,7 @@ const RegistrationStep2: React.FC<RegistrationStep2Props> = ({ onSubmit, onBack,
           <Input
             id="address"
             type="text"
-            placeholder="123 Main St"
+            placeholder="Ward No. 1, Tole"
             {...register('address')}
           />
           {errors.address && (
@@ -79,37 +101,50 @@ const RegistrationStep2: React.FC<RegistrationStep2Props> = ({ onSubmit, onBack,
         
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="city">City</Label>
-            <Input
-              id="city"
-              type="text"
-              placeholder="New York"
-              {...register('city')}
-            />
-            {errors.city && (
-              <p className="text-sm text-destructive">{errors.city.message}</p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="state">State</Label>
-            <Input
-              id="state"
-              type="text"
-              placeholder="NY"
-              {...register('state')}
-            />
+            <Label htmlFor="state">Province</Label>
+            <Select onValueChange={handleProvinceChange}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select province" />
+              </SelectTrigger>
+              <SelectContent>
+                {nepalProvinces.map((province) => (
+                  <SelectItem key={province.name} value={province.name}>
+                    {province.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             {errors.state && (
               <p className="text-sm text-destructive">{errors.state.message}</p>
+            )}
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="city">City/District</Label>
+            <Select onValueChange={handleCityChange} disabled={!selectedProvince}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select city" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableCities.map((city) => (
+                  <SelectItem key={city} value={city}>
+                    {city}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.city && (
+              <p className="text-sm text-destructive">{errors.city.message}</p>
             )}
           </div>
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="zipCode">Zip Code</Label>
+          <Label htmlFor="zipCode">Postal Code</Label>
           <Input
             id="zipCode"
             type="text"
-            placeholder="10001"
+            placeholder="44600"
             {...register('zipCode')}
           />
           {errors.zipCode && (
