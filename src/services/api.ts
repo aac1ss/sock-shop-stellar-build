@@ -66,4 +66,17 @@ export const brandsAPI = {
   delete: (id: string) => api.delete(`/brands/${id}`),
 };
 
+// Payment API
+export const paymentAPI = {
+  initiate: (paymentData: any) => api.post('/payments/initiate', paymentData),
+  verify: (verificationData: any) => api.get('/payments/verify', { params: verificationData }),
+};
+
+// Admin API
+export const adminAPI = {
+  getCustomers: () => api.get('/admin/customers'),
+  getAnalytics: () => api.get('/admin/analytics'),
+  updateOrderStatus: (orderId: string, status: string) => api.put(`/admin/orders/${orderId}/status`, { status }),
+};
+
 export default api;
