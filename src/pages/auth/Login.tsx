@@ -6,17 +6,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 
 const formSchema = z.object({
@@ -28,7 +20,6 @@ type FormData = z.infer<typeof formSchema>;
 
 const Login = () => {
   const { login } = useAuth();
-  const { toast } = useToast();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -43,11 +34,6 @@ const Login = () => {
       navigate('/');
     } catch (error) {
       console.error('Login error:', error);
-      toast({
-        title: 'Login Failed',
-        description: 'Please check your credentials and try again',
-        variant: 'destructive',
-      });
     } finally {
       setIsLoading(false);
     }
@@ -119,7 +105,7 @@ const Login = () => {
         <CardFooter className="flex flex-col space-y-4">
           <div className="text-center text-sm">
             Don't have an account?{' '}
-            <Link to="/register" className="text-primary hover:underline">
+            <Link to="/user-type-selection" className="text-primary hover:underline">
               Sign up
             </Link>
           </div>

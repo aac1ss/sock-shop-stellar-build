@@ -1,12 +1,12 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { User, Session } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
-import { User } from '@/types';
-import { authAPI } from '@/services/api';
-import axios from 'axios';
+import { supabase } from '@/integrations/supabase/client';
 
 type AuthContextType = {
   user: User | null;
+  profile: any | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
@@ -16,63 +16,70 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:6969/api';
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<any | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  axios.defaults.baseURL = API_URL;
-  
-  axios.interceptors.request.use(
-    (config) => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-      return config;
-    },
-    (error) => Promise.reject(error)
-  );
-
   useEffect(() => {
-    const initializeAuth = async () => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        try {
-          const response = await authAPI.getCurrentUser();
-          setUser(response.data);
-        } catch (error) {
-          console.error('Failed to fetch user profile', error);
-          localStorage.removeItem('token');
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          // Fetch user profile
+          setTimeout(async () => {
+            try {
+              const { data: profileData } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', session.user.id)
+                .single();
+              setProfile(profileData);
+            } catch (error) {
+              console.error('Error fetching profile:', error);
+            }
+          }, 0);
+        } else {
+          setProfile(null);
         }
       }
-      setIsLoading(false);
-    };
+    );
 
-    initializeAuth();
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const response = await authAPI.login(email, password);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
       
-      const { token, user } = response.data;
-      localStorage.setItem('token', token);
-      setUser(user);
+      if (error) throw error;
       
       toast({
         title: "Login successful",
-        description: `Welcome back, ${user.name}!`,
+        description: `Welcome back!`,
       });
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error);
       toast({
         title: "Login failed",
-        description: "Invalid email or password.",
+        description: error.message || "Invalid email or password.",
         variant: "destructive",
       });
       throw error;
@@ -84,13 +91,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (userData: any) => {
     setIsLoading(true);
     try {
-      console.log("Registering user:", userData);
-      const response = await authAPI.register(userData);
-      console.log("Registration response:", response.data);
+      const { data, error } = await supabase.auth.signUp({
+        email: userData.email,
+        password: userData.password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            name: userData.name,
+            phone: userData.phone,
+            address: userData.address,
+            city: userData.city,
+            state: userData.state,
+            zip_code: userData.zipCode,
+            role: userData.userType === 'seller' ? 'seller' : 'customer'
+          }
+        }
+      });
       
-      const { token, user } = response.data;
-      localStorage.setItem('token', token);
-      setUser(user);
+      if (error) throw error;
       
       toast({
         title: "Registration successful",
@@ -101,7 +119,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('Registration error:', error);
       toast({
         title: "Registration failed",
-        description: error.response?.data?.message || error.message || "There was a problem creating your account.",
+        description: error.message || "There was a problem creating your account.",
         variant: "destructive",
       });
       throw error;
@@ -110,9 +128,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
+    setProfile(null);
+    setSession(null);
     toast({
       title: "Logged out",
       description: "You have been successfully logged out.",
@@ -120,7 +140,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, isLoading, login, register, logout }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      profile, 
+      isAuthenticated: !!user, 
+      isLoading, 
+      login, 
+      register, 
+      logout 
+    }}>
       {children}
     </AuthContext.Provider>
   );
