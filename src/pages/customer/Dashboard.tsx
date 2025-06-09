@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -44,12 +43,13 @@ const activityData = [
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const userName = user?.user_metadata?.name || user?.email || 'User';
 
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="flex flex-col">
         <h1 className="text-3xl font-bold mb-2">Customer Dashboard</h1>
-        <p className="text-muted-foreground mb-6">Welcome back, {user?.name}</p>
+        <p className="text-muted-foreground mb-6">Welcome back, {userName}</p>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {customerStats.map((stat, i) => (

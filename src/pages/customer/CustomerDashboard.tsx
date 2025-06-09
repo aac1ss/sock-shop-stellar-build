@@ -30,6 +30,8 @@ const CustomerDashboard = () => {
   });
   const [loading, setLoading] = useState(true);
 
+  const userName = user?.user_metadata?.name || user?.email || 'User';
+
   useEffect(() => {
     fetchCustomerData();
   }, []);
@@ -66,7 +68,7 @@ const CustomerDashboard = () => {
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold">Welcome back, {user?.name}!</h1>
+          <h1 className="text-3xl font-bold">Welcome back, {userName}!</h1>
           <p className="text-muted-foreground">Manage your orders and account</p>
         </div>
       </div>
@@ -201,7 +203,7 @@ const CustomerDashboard = () => {
                     <User className="h-6 w-6 text-primary" />
                   </div>
                   <div>
-                    <p className="font-medium">{user?.name}</p>
+                    <p className="font-medium">{userName}</p>
                     <p className="text-sm text-muted-foreground">{user?.email}</p>
                   </div>
                 </div>

@@ -85,8 +85,8 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     navigate('/login');
   };
 
-  const userInitials = user?.name
-    ? user.name
+  const userInitials = user?.user_metadata?.name || user?.email
+    ? (user?.user_metadata?.name || user?.email)
         .split(' ')
         .map((n) => n[0])
         .join('')

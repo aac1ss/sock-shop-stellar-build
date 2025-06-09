@@ -40,8 +40,8 @@ const Navbar = () => {
     navigate('/');
   };
 
-  const userInitials = user?.name
-    ? user.name
+  const userInitials = user?.user_metadata?.name || user?.email
+    ? (user?.user_metadata?.name || user?.email)
         .split(' ')
         .map((n) => n[0])
         .join('')
@@ -52,6 +52,8 @@ const Navbar = () => {
   const closeMobileMenu = () => {
     setIsMenuOpen(false);
   };
+
+  const userName = user?.user_metadata?.name || user?.email || 'User';
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -280,7 +282,7 @@ const Navbar = () => {
                       {isAuthenticated ? (
                         <div className="flex justify-between items-center">
                           <div>
-                            <p className="font-medium">{user?.name}</p>
+                            <p className="font-medium">{userName}</p>
                             <p className="text-sm text-muted-foreground">{user?.email}</p>
                           </div>
                           <Button onClick={handleLogout}>
