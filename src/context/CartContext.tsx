@@ -1,7 +1,7 @@
 
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { cartAPI } from '@/services/api';
+import { cartAPI } from '@/services/supabaseApi';
 import { useAuth } from './AuthContext';
 
 interface CartItem {
@@ -34,7 +34,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const { toast } = useToast();
   const { isAuthenticated } = useAuth();
 
-  // Fetch cart from backend
+  // Fetch cart from Supabase
   const fetchCart = async () => {
     if (!isAuthenticated) return;
     
@@ -85,7 +85,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       console.error('Failed to add to cart:', error);
       toast({
         title: "Failed to add to cart",
-        description: error.response?.data?.message || "There was an error adding the item to your cart.",
+        description: error.message || "There was an error adding the item to your cart.",
         variant: "destructive",
       });
     } finally {
@@ -108,7 +108,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       console.error('Failed to remove from cart:', error);
       toast({
         title: "Failed to remove item",
-        description: error.response?.data?.message || "There was an error removing the item.",
+        description: error.message || "There was an error removing the item.",
         variant: "destructive",
       });
     } finally {
@@ -127,7 +127,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       console.error('Failed to update quantity:', error);
       toast({
         title: "Failed to update quantity",
-        description: error.response?.data?.message || "There was an error updating the quantity.",
+        description: error.message || "There was an error updating the quantity.",
         variant: "destructive",
       });
     } finally {
@@ -150,7 +150,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       console.error('Failed to clear cart:', error);
       toast({
         title: "Failed to clear cart",
-        description: error.response?.data?.message || "There was an error clearing your cart.",
+        description: error.message || "There was an error clearing your cart.",
         variant: "destructive",
       });
     } finally {

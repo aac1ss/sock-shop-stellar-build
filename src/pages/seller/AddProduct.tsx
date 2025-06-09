@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { productsAPI, categoriesAPI, brandsAPI } from '@/services/api';
+import { productsAPI, categoriesAPI, brandsAPI } from '@/services/supabaseApi';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Minus } from 'lucide-react';
 
@@ -45,6 +45,7 @@ const AddProduct = () => {
       setCategories(categoriesRes.data);
       setBrands(brandsRes.data);
     } catch (error) {
+      console.error('Failed to load data:', error);
       toast({
         title: "Error",
         description: "Failed to load categories and brands",
@@ -78,9 +79,10 @@ const AddProduct = () => {
       
       navigate('/seller/dashboard');
     } catch (error: any) {
+      console.error('Failed to create product:', error);
       toast({
         title: "Error",
-        description: error.response?.data?.message || "Failed to create product",
+        description: error.message || "Failed to create product",
         variant: "destructive",
       });
     } finally {
