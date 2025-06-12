@@ -27,26 +27,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Fetch user profile
+          // Fetch or create user profile
           setTimeout(async () => {
             try {
-              const { data: profileData } = await supabase
+              let { data: profileData, error } = await supabase
                 .from('profiles')
                 .select('*')
                 .eq('id', session.user.id)
                 .single();
+              
+              if (error && error.code === 'PGRST116') {
+                // Profile doesn't exist, create one
+                const { data: newProfile, error: createError } = await supabase
+                  .from('profiles')
+                  .insert({
+                    id: session.user.id,
+                    email: session.user.email,
+                    role: 'customer'
+                  })
+                  .select()
+                  .single();
+                
+                if (!createError) {
+                  profileData = newProfile;
+                }
+              }
+              
               setProfile(profileData);
             } catch (error) {
-              console.error('Error fetching profile:', error);
+              console.error('Error fetching/creating profile:', error);
             }
           }, 0);
         } else {
           setProfile(null);
         }
+        
+        setIsLoading(false);
       }
     );
 
@@ -54,7 +75,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      setIsLoading(false);
+      if (!session) {
+        setIsLoading(false);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -74,17 +97,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         title: "Login successful",
         description: `Welcome back!`,
       });
-      
     } catch (error: any) {
       console.error('Login error:', error);
       toast({
         title: "Login failed",
-        description: error.message || "Invalid email or password.",
+        description: error.message || "Invalid email or password",
         variant: "destructive",
       });
-      throw error;
-    } finally {
       setIsLoading(false);
+      throw error;
     }
   };
 
@@ -98,12 +119,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           emailRedirectTo: `${window.location.origin}/`,
           data: {
             name: userData.name,
-            phone: userData.phone,
-            address: userData.address,
-            city: userData.city,
-            state: userData.state,
-            zip_code: userData.zipCode,
-            role: userData.userType === 'seller' ? 'seller' : 'customer'
+            role: userData.role || 'customer'
           }
         }
       });
@@ -112,43 +128,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       toast({
         title: "Registration successful",
-        description: `Welcome to The Socks Box, ${userData.name}!`,
+        description: "Please check your email to verify your account.",
       });
-      
     } catch (error: any) {
       console.error('Registration error:', error);
       toast({
         title: "Registration failed",
-        description: error.message || "There was a problem creating your account.",
+        description: error.message || "Failed to create account",
         variant: "destructive",
       });
-      throw error;
-    } finally {
       setIsLoading(false);
+      throw error;
     }
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setProfile(null);
-    setSession(null);
-    toast({
-      title: "Logged out",
-      description: "You have been successfully logged out.",
-    });
+    try {
+      await supabase.auth.signOut();
+      toast({
+        title: "Logged out",
+        description: "You have been successfully logged out.",
+      });
+    } catch (error: any) {
+      console.error('Logout error:', error);
+      toast({
+        title: "Logout failed",
+        description: error.message || "Failed to log out",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      profile, 
-      isAuthenticated: !!user, 
-      isLoading, 
-      login, 
-      register, 
-      logout 
-    }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        profile,
+        isAuthenticated: !!session,
+        isLoading,
+        login,
+        register,
+        logout
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

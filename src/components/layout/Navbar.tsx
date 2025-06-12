@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingCart, Menu, X, Heart, User, LogOut, Settings, LayoutDashboard } from 'lucide-react';
@@ -29,7 +30,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 
 const Navbar = () => {
   const { getCartItemCount } = useCart();
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, profile, isAuthenticated, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
   const { theme } = useTheme();
@@ -38,6 +39,16 @@ const Navbar = () => {
   const handleLogout = () => {
     logout();
     navigate('/');
+  };
+
+  const handleDashboardNavigation = () => {
+    if (profile?.role === 'admin') {
+      navigate('/admin');
+    } else if (profile?.role === 'seller') {
+      navigate('/seller/dashboard');
+    } else {
+      navigate('/customer/dashboard');
+    }
   };
 
   const userInitials = user?.user_metadata?.name || user?.email
@@ -174,18 +185,14 @@ const Navbar = () => {
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>My Account</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem className="flex items-center gap-2" onClick={() => navigate('/customer/dashboard')}>
-                    <User className="h-4 w-4" />
+                  <DropdownMenuItem className="flex items-center gap-2" onClick={handleDashboardNavigation}>
+                    <LayoutDashboard className="h-4 w-4" />
                     <span>Dashboard</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="flex items-center gap-2" onClick={() => navigate('/customer/orders')}>
-                    <ShoppingCart className="h-4 w-4" />
-                    <span>My Orders</span>
-                  </DropdownMenuItem>
-                  {user?.role === 'admin' && (
+                  {profile?.role === 'admin' && (
                     <DropdownMenuItem className="flex items-center gap-2" onClick={() => navigate('/admin')}>
                       <LayoutDashboard className="h-4 w-4" />
-                      <span>Admin Dashboard</span>
+                      <span>Admin Panel</span>
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuItem className="flex items-center gap-2">
@@ -216,7 +223,7 @@ const Navbar = () => {
               </Button>
             </Link>
 
-            {/* Mobile menu button - Using Drawer instead of custom overlay */}
+            {/* Mobile menu button */}
             {isMobile ? (
               <Drawer>
                 <DrawerTrigger asChild>

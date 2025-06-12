@@ -23,7 +23,14 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRole }
   }
   
   if (allowedRole && profile?.role !== allowedRole) {
-    return <Navigate to="/" replace />;
+    // Redirect based on user role
+    if (profile?.role === 'admin') {
+      return <Navigate to="/admin" replace />;
+    } else if (profile?.role === 'seller') {
+      return <Navigate to="/seller/dashboard" replace />;
+    } else {
+      return <Navigate to="/customer/dashboard" replace />;
+    }
   }
   
   return <>{children}</>;

@@ -11,15 +11,18 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children, requireAuth = false }) => {
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { isAuthenticated, isLoading, profile } = useAuth();
 
-  if (requireAuth && !isLoading && !isAuthenticated) {
-    return <Navigate to="/login" />;
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    );
   }
-  
-  // If the user is an admin, redirect to admin dashboard
-  if (!isLoading && isAuthenticated && user?.role === 'admin' && window.location.pathname === '/') {
-    return <Navigate to="/admin" />;
+
+  if (requireAuth && !isAuthenticated) {
+    return <Navigate to="/login" />;
   }
 
   return (
