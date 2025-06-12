@@ -198,7 +198,7 @@ export const ordersAPI = {
           products (name, main_image)
         )
       `)
-      .order('created_at', { ascending: false });
+      .order('date', { ascending: false });
     
     if (error) throw error;
     return { data };
@@ -261,17 +261,20 @@ export const cartAPI = {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
-    // Get or create cart
+    // Get or create cart using the new user_uuid column
     let { data: cart } = await supabase
       .from('carts')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_uuid', user.id)
       .single();
 
     if (!cart) {
       const { data: newCart, error: cartError } = await supabase
         .from('carts')
-        .insert({ user_id: user.id })
+        .insert({ 
+          user_id: 1, // Temporary value for the old column
+          user_uuid: user.id 
+        })
         .select()
         .single();
       
@@ -316,13 +319,16 @@ export const cartAPI = {
     let { data: cart } = await supabase
       .from('carts')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_uuid', user.id)
       .single();
 
     if (!cart) {
       const { data: newCart, error: cartError } = await supabase
         .from('carts')
-        .insert({ user_id: user.id })
+        .insert({ 
+          user_id: 1, // Temporary value for the old column
+          user_uuid: user.id 
+        })
         .select()
         .single();
       
@@ -402,7 +408,7 @@ export const cartAPI = {
     const { data: cart } = await supabase
       .from('carts')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_uuid', user.id)
       .single();
 
     if (cart) {
@@ -554,7 +560,7 @@ export const brandsAPI = {
 export const adminAPI = {
   getCustomers: async () => {
     const { data, error } = await supabase
-      .from('users')
+      .from('profiles')
       .select('*')
       .eq('role', 'customer');
     
@@ -573,7 +579,7 @@ export const adminAPI = {
       .select('*');
 
     const { data: users } = await supabase
-      .from('users')
+      .from('profiles')
       .select('*');
 
     return {

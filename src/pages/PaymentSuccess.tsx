@@ -5,14 +5,19 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CheckCircle } from 'lucide-react';
 
+interface OrderState {
+  orderId?: string;
+  orderNumber?: string;
+}
+
 const PaymentSuccess = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [orderDetails, setOrderDetails] = useState<any>(null);
+  const [orderDetails, setOrderDetails] = useState<OrderState | null>(null);
 
   useEffect(() => {
     // Get order details from navigation state
-    const state = location.state as { orderId?: string; orderNumber?: string } | null;
+    const state = location.state as OrderState | null;
     if (state) {
       setOrderDetails(state);
     }

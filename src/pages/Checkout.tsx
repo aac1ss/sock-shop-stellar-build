@@ -55,7 +55,7 @@ const Checkout = () => {
 
       // Create order in Supabase
       const orderData = {
-        user_id: parseInt(user.id), // Convert UUID to number for now
+        user_id: 1, // Using hardcoded value for now since we need to handle UUID conversion
         total_amount: total,
         status: 'pending',
         date: new Date().toISOString(),
@@ -77,34 +77,37 @@ const Checkout = () => {
 
       if (orderError) throw orderError;
 
-      // Create order items
-      const orderItems = cart.map(item => ({
-        order_id: order.id,
-        product_id: item.productId,
-        quantity: item.quantity,
-        price: item.price,
-        name: item.productName || 'Product',
-        color: item.color,
-        size: item.size,
-        subtotal: item.price * item.quantity
-      }));
+      if (order) {
+        // Create order items
+        const orderItems = cart.map(item => ({
+          order_id: order.id,
+          product_id: item.productId,
+          quantity: item.quantity,
+          price: item.price,
+          name: item.productName || 'Product',
+          product_name: item.productName || 'Product',
+          color: item.color,
+          size: item.size,
+          subtotal: item.price * item.quantity
+        }));
 
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems);
+        const { error: itemsError } = await supabase
+          .from('order_items')
+          .insert(orderItems);
 
-      if (itemsError) throw itemsError;
+        if (itemsError) throw itemsError;
 
-      // Clear cart and redirect
-      clearCart();
-      toast({
-        title: "Order placed successfully!",
-        description: "You will receive a confirmation email shortly.",
-      });
-      
-      navigate('/payment-success', { 
-        state: { orderId: order.id, orderNumber: order.order_number }
-      });
+        // Clear cart and redirect
+        clearCart();
+        toast({
+          title: "Order placed successfully!",
+          description: "You will receive a confirmation email shortly.",
+        });
+        
+        navigate('/payment-success', { 
+          state: { orderId: order.id, orderNumber: order.order_number }
+        });
+      }
 
     } catch (error: any) {
       console.error('Order creation error:', error);

@@ -131,18 +131,21 @@ export type Database = {
           id: number
           updated_at: string | null
           user_id: number
+          user_uuid: string | null
         }
         Insert: {
           created_at?: string | null
           id?: number
           updated_at?: string | null
           user_id: number
+          user_uuid?: string | null
         }
         Update: {
           created_at?: string | null
           id?: number
           updated_at?: string | null
           user_id?: number
+          user_uuid?: string | null
         }
         Relationships: [
           {
@@ -473,6 +476,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      profiles: {
+        Row: {
+          address: string | null
+          city: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          name: string | null
+          phone: string | null
+          role: string | null
+          state: string | null
+          updated_at: string | null
+          zip_code: string | null
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          created_at?: string | null
+          email?: string | null
+          id: string
+          name?: string | null
+          phone?: string | null
+          role?: string | null
+          state?: string | null
+          updated_at?: string | null
+          zip_code?: string | null
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name?: string | null
+          phone?: string | null
+          role?: string | null
+          state?: string | null
+          updated_at?: string | null
+          zip_code?: string | null
+        }
+        Relationships: []
       }
       users: {
         Row: {
