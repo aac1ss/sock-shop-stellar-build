@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Package, 
   DollarSign, 
@@ -14,8 +16,6 @@ import {
   Edit,
   Trash2 
 } from 'lucide-react';
-import { productsAPI, ordersAPI } from '@/services/api';
-import { useToast } from '@/hooks/use-toast';
 
 const SellerDashboard = () => {
   const navigate = useNavigate();
@@ -37,22 +37,47 @@ const SellerDashboard = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [productsRes, ordersRes] = await Promise.all([
-        productsAPI.getAll(),
-        ordersAPI.getAll()
-      ]);
+      
+      // Fetch products with related data
+      const { data: productsData, error: productsError } = await supabase
+        .from('products')
+        .select(`
+          *,
+          categories (name),
+          brands (name),
+          product_images (image_url),
+          product_colors (color),
+          product_sizes (size)
+        `);
 
-      setProducts(productsRes.data);
-      setOrders(ordersRes.data);
+      if (productsError) throw productsError;
+
+      // Fetch orders
+      const { data: ordersData, error: ordersError } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          order_items (
+            *,
+            products (name, main_image)
+          )
+        `)
+        .order('date', { ascending: false });
+
+      if (ordersError) throw ordersError;
+
+      setProducts(productsData || []);
+      setOrders(ordersData || []);
 
       // Calculate analytics
+      const totalRevenue = ordersData?.reduce((sum, order) => sum + Number(order.total_amount || 0), 0) || 0;
       setAnalytics({
-        totalProducts: productsRes.data.length,
-        totalSales: ordersRes.data.reduce((sum: number, order: any) => sum + order.totalAmount, 0),
-        totalOrders: ordersRes.data.length,
-        revenue: ordersRes.data.reduce((sum: number, order: any) => sum + order.totalAmount, 0)
+        totalProducts: productsData?.length || 0,
+        totalSales: totalRevenue,
+        totalOrders: ordersData?.length || 0,
+        revenue: totalRevenue
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to fetch data:', error);
       toast({
         title: "Error",
@@ -64,15 +89,24 @@ const SellerDashboard = () => {
     }
   };
 
-  const handleDeleteProduct = async (productId: string) => {
+  const handleDeleteProduct = async (productId: number) => {
+    if (!confirm('Are you sure you want to delete this product?')) return;
+
     try {
-      await productsAPI.delete(productId);
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', productId);
+
+      if (error) throw error;
+
       toast({
         title: "Success",
         description: "Product deleted successfully",
       });
       fetchData();
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Failed to delete product:', error);
       toast({
         title: "Error",
         description: "Failed to delete product",
@@ -82,7 +116,13 @@ const SellerDashboard = () => {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-96">Loading...</div>;
+    return (
+      <div className="container mx-auto p-6">
+        <div className="flex items-center justify-center h-96">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -123,7 +163,7 @@ const SellerDashboard = () => {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${analytics.revenue.toFixed(2)}</div>
+            <div className="text-2xl font-bold">Rs. {analytics.revenue.toFixed(2)}</div>
           </CardContent>
         </Card>
 
@@ -145,61 +185,71 @@ const SellerDashboard = () => {
           <CardDescription>Manage your product listings</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left p-2">Product</th>
-                  <th className="text-left p-2">Category</th>
-                  <th className="text-left p-2">Price</th>
-                  <th className="text-left p-2">Stock</th>
-                  <th className="text-left p-2">Status</th>
-                  <th className="text-left p-2">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {products.map((product: any) => (
-                  <tr key={product.id} className="border-b">
-                    <td className="p-2">
-                      <div className="flex items-center space-x-3">
-                        <img 
-                          src={product.images?.[0] || '/placeholder.svg'} 
-                          alt={product.name}
-                          className="w-10 h-10 rounded object-cover"
-                        />
-                        <span className="font-medium">{product.name}</span>
-                      </div>
-                    </td>
-                    <td className="p-2">{product.categoryName}</td>
-                    <td className="p-2">${product.price}</td>
-                    <td className="p-2">{product.inventory}</td>
-                    <td className="p-2">
-                      <Badge variant={product.inventory > 0 ? "default" : "destructive"}>
-                        {product.inventory > 0 ? "In Stock" : "Out of Stock"}
-                      </Badge>
-                    </td>
-                    <td className="p-2">
-                      <div className="flex space-x-2">
-                        <Button size="sm" variant="outline">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button size="sm" variant="outline">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => handleDeleteProduct(product.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </td>
+          {products.length === 0 ? (
+            <div className="text-center py-8">
+              <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground">No products yet</p>
+              <Button className="mt-4" onClick={() => navigate('/seller/add-product')}>
+                Add Your First Product
+              </Button>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left p-2">Product</th>
+                    <th className="text-left p-2">Category</th>
+                    <th className="text-left p-2">Price</th>
+                    <th className="text-left p-2">Stock</th>
+                    <th className="text-left p-2">Status</th>
+                    <th className="text-left p-2">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {products.map((product: any) => (
+                    <tr key={product.id} className="border-b">
+                      <td className="p-2">
+                        <div className="flex items-center space-x-3">
+                          <img 
+                            src={product.main_image || product.product_images?.[0]?.image_url || '/placeholder.svg'} 
+                            alt={product.name}
+                            className="w-10 h-10 rounded object-cover"
+                          />
+                          <span className="font-medium">{product.name}</span>
+                        </div>
+                      </td>
+                      <td className="p-2">{product.categories?.name || 'N/A'}</td>
+                      <td className="p-2">Rs. {Number(product.price).toFixed(2)}</td>
+                      <td className="p-2">{product.inventory}</td>
+                      <td className="p-2">
+                        <Badge variant={product.inventory > 0 ? "default" : "destructive"}>
+                          {product.inventory > 0 ? "In Stock" : "Out of Stock"}
+                        </Badge>
+                      </td>
+                      <td className="p-2">
+                        <div className="flex space-x-2">
+                          <Button size="sm" variant="outline">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" variant="outline">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleDeleteProduct(product.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -210,20 +260,29 @@ const SellerDashboard = () => {
           <CardDescription>Latest orders for your products</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {orders.slice(0, 5).map((order: any) => (
-              <div key={order.id} className="flex items-center justify-between p-4 border rounded-lg">
-                <div>
-                  <p className="font-medium">Order #{order.id}</p>
-                  <p className="text-sm text-muted-foreground">{order.customerName}</p>
+          {orders.length === 0 ? (
+            <div className="text-center py-8">
+              <ShoppingCart className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground">No orders yet</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {orders.slice(0, 5).map((order: any) => (
+                <div key={order.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div>
+                    <p className="font-medium">Order #{order.order_number || order.id}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {order.first_name} {order.last_name}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium">Rs. {Number(order.total_amount).toFixed(2)}</p>
+                    <Badge variant="outline">{order.status || 'pending'}</Badge>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-medium">${order.totalAmount}</p>
-                  <Badge variant="outline">{order.status}</Badge>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

@@ -7,9 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { productsAPI, categoriesAPI, brandsAPI } from '@/services/supabaseApi';
+import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Minus } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 
 const AddProduct = () => {
   const [categories, setCategories] = useState([]);
@@ -38,13 +38,16 @@ const AddProduct = () => {
   const fetchData = async () => {
     try {
       const [categoriesRes, brandsRes] = await Promise.all([
-        categoriesAPI.getAll(),
-        brandsAPI.getAll()
+        supabase.from('categories').select('*'),
+        supabase.from('brands').select('*')
       ]);
       
-      setCategories(categoriesRes.data);
-      setBrands(brandsRes.data);
-    } catch (error) {
+      if (categoriesRes.error) throw categoriesRes.error;
+      if (brandsRes.error) throw brandsRes.error;
+      
+      setCategories(categoriesRes.data || []);
+      setBrands(brandsRes.data || []);
+    } catch (error: any) {
       console.error('Failed to load data:', error);
       toast({
         title: "Error",
@@ -59,18 +62,71 @@ const AddProduct = () => {
     setLoading(true);
     
     try {
-      const productData = {
-        ...formData,
-        price: parseFloat(formData.price),
-        inventory: parseInt(formData.inventory),
-        categoryId: parseInt(formData.categoryId),
-        brandId: parseInt(formData.brandId),
-        images: formData.images.filter(img => img.trim()),
-        colors: formData.colors.filter(color => color.trim()),
-        sizes: formData.sizes.filter(size => size.trim())
-      };
+      // Create product
+      const { data: product, error: productError } = await supabase
+        .from('products')
+        .insert({
+          name: formData.name,
+          description: formData.description,
+          price: parseFloat(formData.price),
+          inventory: parseInt(formData.inventory),
+          stock_quantity: parseInt(formData.inventory),
+          category_id: parseInt(formData.categoryId),
+          brand_id: parseInt(formData.brandId),
+          featured: formData.featured,
+          active: true,
+          main_image: formData.images.filter(img => img.trim())[0] || null,
+          slug: formData.name.toLowerCase().replace(/\s+/g, '-')
+        })
+        .select()
+        .single();
 
-      await productsAPI.create(productData);
+      if (productError) throw productError;
+
+      // Insert images
+      const validImages = formData.images.filter(img => img.trim());
+      if (validImages.length > 0) {
+        const imageInserts = validImages.map(imageUrl => ({
+          product_id: product.id,
+          image_url: imageUrl
+        }));
+        
+        const { error: imageError } = await supabase
+          .from('product_images')
+          .insert(imageInserts);
+        
+        if (imageError) console.error('Error inserting images:', imageError);
+      }
+
+      // Insert colors
+      const validColors = formData.colors.filter(color => color.trim());
+      if (validColors.length > 0) {
+        const colorInserts = validColors.map(color => ({
+          product_id: product.id,
+          color: color
+        }));
+        
+        const { error: colorError } = await supabase
+          .from('product_colors')
+          .insert(colorInserts);
+        
+        if (colorError) console.error('Error inserting colors:', colorError);
+      }
+
+      // Insert sizes
+      const validSizes = formData.sizes.filter(size => size.trim());
+      if (validSizes.length > 0) {
+        const sizeInserts = validSizes.map(size => ({
+          product_id: product.id,
+          size: size
+        }));
+        
+        const { error: sizeError } = await supabase
+          .from('product_sizes')
+          .insert(sizeInserts);
+        
+        if (sizeError) console.error('Error inserting sizes:', sizeError);
+      }
       
       toast({
         title: "Success",
@@ -90,21 +146,21 @@ const AddProduct = () => {
     }
   };
 
-  const addArrayField = (field: string) => {
+  const addArrayField = (field: 'images' | 'colors' | 'sizes') => {
     setFormData(prev => ({
       ...prev,
       [field]: [...prev[field], '']
     }));
   };
 
-  const updateArrayField = (field: string, index: number, value: string) => {
+  const updateArrayField = (field: 'images' | 'colors' | 'sizes', index: number, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: prev[field].map((item, i) => i === index ? value : item)
     }));
   };
 
-  const removeArrayField = (field: string, index: number) => {
+  const removeArrayField = (field: 'images' | 'colors' | 'sizes', index: number) => {
     if (formData[field].length > 1) {
       setFormData(prev => ({
         ...prev,
@@ -215,7 +271,7 @@ const AddProduct = () => {
                       onClick={() => removeArrayField('images', index)}
                       disabled={formData.images.length === 1}
                     >
-                      <Minus className="h-4 w-4" />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 ))}
@@ -244,7 +300,7 @@ const AddProduct = () => {
                       onClick={() => removeArrayField('colors', index)}
                       disabled={formData.colors.length === 1}
                     >
-                      <Minus className="h-4 w-4" />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 ))}
@@ -273,7 +329,7 @@ const AddProduct = () => {
                       onClick={() => removeArrayField('sizes', index)}
                       disabled={formData.sizes.length === 1}
                     >
-                      <Minus className="h-4 w-4" />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 ))}

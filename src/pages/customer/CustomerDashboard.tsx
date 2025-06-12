@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/context/AuthContext';
-import { ordersAPI } from '@/services/api';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { 
   Package, 
@@ -15,7 +15,7 @@ import {
   CreditCard, 
   User,
   ShoppingBag,
-  Truck
+  Plus
 } from 'lucide-react';
 
 const CustomerDashboard = () => {
@@ -26,11 +26,11 @@ const CustomerDashboard = () => {
     totalOrders: 0,
     totalSpent: 0,
     loyaltyPoints: 0,
-    activeCoupons: 0
+    activeCoupons: 2 // Mock data
   });
   const [loading, setLoading] = useState(true);
 
-  const userName = user?.user_metadata?.name || user?.email || 'User';
+  const userName = user?.user_metadata?.name || user?.email || 'Customer';
 
   useEffect(() => {
     fetchCustomerData();
@@ -38,18 +38,32 @@ const CustomerDashboard = () => {
 
   const fetchCustomerData = async () => {
     try {
-      const ordersRes = await ordersAPI.getAll();
-      setOrders(ordersRes.data);
+      // Since we don't have proper user linking yet, we'll show all orders as example
+      const { data: ordersData, error } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          order_items (
+            *,
+            products (name, main_image)
+          )
+        `)
+        .order('date', { ascending: false });
+
+      if (error) throw error;
+
+      setOrders(ordersData || []);
       
-      // Calculate stats
-      const totalSpent = ordersRes.data.reduce((sum: number, order: any) => sum + order.totalAmount, 0);
+      // Calculate stats from orders
+      const totalSpent = ordersData?.reduce((sum, order) => sum + Number(order.total_amount || 0), 0) || 0;
       setStats({
-        totalOrders: ordersRes.data.length,
+        totalOrders: ordersData?.length || 0,
         totalSpent,
         loyaltyPoints: Math.floor(totalSpent * 0.1), // 10% back as points
-        activeCoupons: 2 // Mock data
+        activeCoupons: 2
       });
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Error fetching customer data:', error);
       toast({
         title: "Error",
         description: "Failed to load customer data",
@@ -61,7 +75,13 @@ const CustomerDashboard = () => {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-96">Loading...</div>;
+    return (
+      <div className="container mx-auto p-6">
+        <div className="flex items-center justify-center h-96">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -91,7 +111,7 @@ const CustomerDashboard = () => {
             <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${stats.totalSpent.toFixed(2)}</div>
+            <div className="text-2xl font-bold">Rs. {stats.totalSpent.toFixed(2)}</div>
           </CardContent>
         </Card>
 
@@ -135,7 +155,9 @@ const CustomerDashboard = () => {
                   <div className="text-center py-8">
                     <ShoppingBag className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <p className="text-muted-foreground">No orders yet</p>
-                    <Button className="mt-4">Start Shopping</Button>
+                    <Button className="mt-4" onClick={() => window.location.href = '/products'}>
+                      Start Shopping
+                    </Button>
                   </div>
                 ) : (
                   orders.map((order: any) => (
@@ -145,13 +167,17 @@ const CustomerDashboard = () => {
                           <Package className="h-5 w-5 text-primary" />
                         </div>
                         <div>
-                          <p className="font-medium">Order #{order.id}</p>
-                          <p className="text-sm text-muted-foreground">{order.date}</p>
+                          <p className="font-medium">Order #{order.order_number || order.id}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {new Date(order.date).toLocaleDateString()}
+                          </p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-medium">${order.totalAmount}</p>
-                        <Badge variant="outline">{order.status}</Badge>
+                        <p className="font-medium">Rs. {Number(order.total_amount).toFixed(2)}</p>
+                        <Badge variant="outline" className="capitalize">
+                          {order.status || 'pending'}
+                        </Badge>
                       </div>
                     </div>
                   ))
@@ -170,7 +196,9 @@ const CustomerDashboard = () => {
               <div className="text-center py-8">
                 <Heart className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground">Your wishlist is empty</p>
-                <Button className="mt-4">Browse Products</Button>
+                <Button className="mt-4" onClick={() => window.location.href = '/products'}>
+                  Browse Products
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -185,7 +213,10 @@ const CustomerDashboard = () => {
               <div className="text-center py-8">
                 <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground">No saved addresses</p>
-                <Button className="mt-4">Add Address</Button>
+                <Button className="mt-4">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Address
+                </Button>
               </div>
             </CardContent>
           </Card>
