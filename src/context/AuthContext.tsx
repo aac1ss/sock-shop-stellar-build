@@ -33,36 +33,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (session?.user) {
           // Fetch or create user profile
-          setTimeout(async () => {
-            try {
-              let { data: profileData, error } = await supabase
+          try {
+            let { data: profileData, error } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .single();
+            
+            if (error && error.code === 'PGRST116') {
+              // Profile doesn't exist, create one with customer role as default
+              const { data: newProfile, error: createError } = await supabase
                 .from('profiles')
-                .select('*')
-                .eq('id', session.user.id)
+                .insert({
+                  id: session.user.id,
+                  email: session.user.email,
+                  name: session.user.user_metadata?.name || session.user.email?.split('@')[0],
+                  role: 'customer' // Default role
+                })
+                .select()
                 .single();
               
-              if (error && error.code === 'PGRST116') {
-                // Profile doesn't exist, create one
-                const { data: newProfile, error: createError } = await supabase
-                  .from('profiles')
-                  .insert({
-                    id: session.user.id,
-                    email: session.user.email,
-                    role: 'customer'
-                  })
-                  .select()
-                  .single();
-                
-                if (!createError) {
-                  profileData = newProfile;
-                }
+              if (!createError) {
+                profileData = newProfile;
+                console.log('Created new profile:', profileData);
+              } else {
+                console.error('Error creating profile:', createError);
               }
-              
-              setProfile(profileData);
-            } catch (error) {
-              console.error('Error fetching/creating profile:', error);
             }
-          }, 0);
+            
+            setProfile(profileData);
+            console.log('User profile loaded:', profileData);
+          } catch (error) {
+            console.error('Error fetching/creating profile:', error);
+          }
         } else {
           setProfile(null);
         }

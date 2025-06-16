@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 
 const CustomerDashboard = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { toast } = useToast();
   const [orders, setOrders] = useState([]);
   const [stats, setStats] = useState({
@@ -30,15 +30,19 @@ const CustomerDashboard = () => {
   });
   const [loading, setLoading] = useState(true);
 
-  const userName = user?.user_metadata?.name || user?.email || 'Customer';
+  const userName = user?.user_metadata?.name || profile?.name || user?.email || 'Customer';
 
   useEffect(() => {
-    fetchCustomerData();
-  }, []);
+    if (user && profile) {
+      fetchCustomerData();
+    }
+  }, [user, profile]);
 
   const fetchCustomerData = async () => {
     try {
-      // Fetch all orders as example data since we don't have proper user linking yet
+      console.log('Fetching customer data for user:', user?.id, 'profile:', profile);
+      
+      // Fetch orders - for now get all orders since we need to fix user linking
       const { data: ordersData, error } = await supabase
         .from('orders')
         .select(`
@@ -50,8 +54,12 @@ const CustomerDashboard = () => {
         `)
         .order('date', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching orders:', error);
+        throw error;
+      }
 
+      console.log('Orders fetched:', ordersData);
       setOrders(ordersData || []);
       
       // Calculate stats from orders
@@ -105,6 +113,9 @@ const CustomerDashboard = () => {
         <div>
           <h1 className="text-3xl font-bold">Welcome back, {userName}!</h1>
           <p className="text-muted-foreground">Manage your orders and account</p>
+          {profile && (
+            <p className="text-sm text-muted-foreground">Role: {profile.role}</p>
+          )}
         </div>
       </div>
 
@@ -251,6 +262,7 @@ const CustomerDashboard = () => {
                   <div>
                     <p className="font-medium">{userName}</p>
                     <p className="text-sm text-muted-foreground">{user?.email}</p>
+                    <p className="text-sm text-muted-foreground">Role: {profile?.role || 'customer'}</p>
                   </div>
                 </div>
                 <Button variant="outline">Edit Profile</Button>
