@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,6 +11,7 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { CartProvider } from "@/context/CartContext";
 import UserTypeSelection from "./pages/auth/UserTypeSelection";
+import AuthDebug from "./components/AuthDebug";
 
 // Pages
 import Home from "./pages/Home";
@@ -59,6 +61,7 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/user-type-selection" element={<UserTypeSelection />} />
+              <Route path="/auth-debug" element={<Layout><AuthDebug /></Layout>} />
               
               {/* Payment Routes */}
               <Route path="/payment/success" element={<PaymentSuccess />} />
