@@ -1,71 +1,98 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BarChart } from '@/components/ui/chart';
-import { productsAPI, ordersAPI, adminAPI } from '@/services/api';
+import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { 
-  DollarSign, 
   Package, 
   ShoppingCart, 
   Users, 
+  DollarSign,
   TrendingUp,
-  Activity,
-  AlertTriangle,
-  CheckCircle
+  ArrowUpRight,
+  ArrowDownRight,
+  Edit,
+  Trash2,
+  Plus
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const AdminDashboard = () => {
   const { toast } = useToast();
-  const [analytics, setAnalytics] = useState({
-    totalRevenue: 0,
-    totalOrders: 0,
+  const navigate = useNavigate();
+  const [stats, setStats] = useState({
     totalProducts: 0,
+    totalOrders: 0,
     totalCustomers: 0,
+    totalRevenue: 0,
     recentOrders: [],
-    lowStockProducts: [],
-    monthlyRevenue: []
+    recentProducts: []
   });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchAnalytics();
+    fetchDashboardData();
   }, []);
 
-  const fetchAnalytics = async () => {
+  const fetchDashboardData = async () => {
     try {
-      const [productsRes, ordersRes, customersRes] = await Promise.all([
-        productsAPI.getAll(),
-        ordersAPI.getAll(),
-        adminAPI.getCustomers()
-      ]);
+      // Fetch products count
+      const { data: products, error: productsError } = await supabase
+        .from('products')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(5);
 
-      const totalRevenue = ordersRes.data.reduce((sum: number, order: any) => sum + order.totalAmount, 0);
-      const lowStockProducts = productsRes.data.filter((product: any) => product.inventory < 10);
+      if (productsError) throw productsError;
 
-      setAnalytics({
+      // Fetch orders with items
+      const { data: orders, error: ordersError } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          order_items (
+            *,
+            products (name, main_image)
+          )
+        `)
+        .order('date', { ascending: false })
+        .limit(5);
+
+      if (ordersError) throw ordersError;
+
+      // Fetch all orders for revenue calculation
+      const { data: allOrders, error: allOrdersError } = await supabase
+        .from('orders')
+        .select('total_amount');
+
+      if (allOrdersError) throw allOrdersError;
+
+      // Fetch customers (profiles)
+      const { data: customers, error: customersError } = await supabase
+        .from('profiles')
+        .select('id', { count: 'exact' })
+        .eq('role', 'customer');
+
+      if (customersError) throw customersError;
+
+      // Calculate total revenue
+      const totalRevenue = allOrders?.reduce((sum, order) => sum + Number(order.total_amount || 0), 0) || 0;
+
+      setStats({
+        totalProducts: products?.length || 0,
+        totalOrders: allOrders?.length || 0,
+        totalCustomers: customers?.length || 0,
         totalRevenue,
-        totalOrders: ordersRes.data.length,
-        totalProducts: productsRes.data.length,
-        totalCustomers: customersRes.data.length,
-        recentOrders: ordersRes.data.slice(0, 5),
-        lowStockProducts,
-        monthlyRevenue: [
-          { name: 'Jan', value: 4000 },
-          { name: 'Feb', value: 3000 },
-          { name: 'Mar', value: 5000 },
-          { name: 'Apr', value: 4500 },
-          { name: 'May', value: 6000 },
-          { name: 'Jun', value: 5500 }
-        ]
+        recentOrders: orders || [],
+        recentProducts: products || []
       });
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Error fetching dashboard data:', error);
       toast({
         title: "Error",
-        description: "Failed to load analytics data",
+        description: "Failed to load dashboard data",
         variant: "destructive",
       });
     } finally {
@@ -73,29 +100,72 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleDeleteProduct = async (productId: number) => {
+    if (!confirm('Are you sure you want to delete this product?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', productId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Product deleted successfully",
+      });
+      fetchDashboardData();
+    } catch (error: any) {
+      console.error('Failed to delete product:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete product",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCreateProduct = () => {
+    navigate('/admin/products/create');
+  };
+
   if (loading) {
-    return <div className="flex items-center justify-center h-96">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-        <p className="text-muted-foreground">Platform overview and management</p>
+        <div className="flex gap-2">
+          <Button onClick={() => navigate('/admin/products')}>
+            <Package className="h-4 w-4 mr-2" />
+            Manage Products
+          </Button>
+          <Button onClick={() => navigate('/admin/orders')}>
+            <ShoppingCart className="h-4 w-4 mr-2" />
+            Manage Orders
+          </Button>
+        </div>
       </div>
 
-      {/* Stats Overview */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Total Products</CardTitle>
+            <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${analytics.totalRevenue.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground flex items-center">
-              <TrendingUp className="mr-1 h-4 w-4 text-green-500" />
-              +20.1% from last month
+            <div className="text-2xl font-bold">{stats.totalProducts}</div>
+            <p className="text-xs text-muted-foreground">
+              <TrendingUp className="h-3 w-3 inline mr-1" />
+              Active products
             </p>
           </CardContent>
         </Card>
@@ -106,23 +176,10 @@ const AdminDashboard = () => {
             <ShoppingCart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{analytics.totalOrders}</div>
-            <p className="text-xs text-muted-foreground flex items-center">
-              <TrendingUp className="mr-1 h-4 w-4 text-green-500" />
-              +12% from last month
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Products</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{analytics.totalProducts}</div>
+            <div className="text-2xl font-bold">{stats.totalOrders}</div>
             <p className="text-xs text-muted-foreground">
-              {analytics.lowStockProducts.length} low stock items
+              <ArrowUpRight className="h-3 w-3 inline mr-1" />
+              All time orders
             </p>
           </CardContent>
         </Card>
@@ -133,131 +190,120 @@ const AdminDashboard = () => {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{analytics.totalCustomers}</div>
-            <p className="text-xs text-muted-foreground flex items-center">
-              <TrendingUp className="mr-1 h-4 w-4 text-green-500" />
-              +8% from last month
+            <div className="text-2xl font-bold">{stats.totalCustomers}</div>
+            <p className="text-xs text-muted-foreground">
+              <TrendingUp className="h-3 w-3 inline mr-1" />
+              Registered users
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">Rs. {stats.totalRevenue.toFixed(2)}</div>
+            <p className="text-xs text-muted-foreground">
+              <ArrowUpRight className="h-3 w-3 inline mr-1" />
+              All time revenue
             </p>
           </CardContent>
         </Card>
       </div>
 
-      <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid grid-cols-4 max-w-md">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="orders">Orders</TabsTrigger>
-          <TabsTrigger value="products">Products</TabsTrigger>
-          <TabsTrigger value="alerts">Alerts</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview">
-          <Card>
-            <CardHeader>
-              <CardTitle>Revenue Overview</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <BarChart
-                data={analytics.monthlyRevenue}
-                xAxisKey="name"
-                showLegend={false}
-                series={[
-                  {
-                    dataKey: "value",
-                    label: "Revenue",
-                    color: "hsl(142.1, 76.2%, 36.3%)",
-                  },
-                ]}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="orders">
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Orders</CardTitle>
-              <CardDescription>Latest orders from customers</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {analytics.recentOrders.map((order: any) => (
-                  <div key={order.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center space-x-4">
-                      <div className="bg-primary/10 p-2 rounded">
-                        <ShoppingCart className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="font-medium">Order #{order.id}</p>
-                        <p className="text-sm text-muted-foreground">{order.customerName}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium">${order.totalAmount}</p>
-                      <Badge variant="outline">{order.status}</Badge>
+      {/* Recent Products */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Recent Products</CardTitle>
+          <Button onClick={handleCreateProduct}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Product
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {stats.recentProducts.length === 0 ? (
+            <div className="text-center py-8">
+              <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground">No products yet</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {stats.recentProducts.map((product: any) => (
+                <div key={product.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center space-x-4">
+                    <img 
+                      src={product.main_image || '/placeholder.svg'} 
+                      alt={product.name}
+                      className="w-12 h-12 rounded object-cover"
+                    />
+                    <div>
+                      <p className="font-medium">{product.name}</p>
+                      <p className="text-sm text-muted-foreground">Rs. {Number(product.price).toFixed(2)}</p>
                     </div>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+                  <div className="flex items-center space-x-2">
+                    <Badge variant={product.inventory > 0 ? "default" : "destructive"}>
+                      {product.inventory > 0 ? `${product.inventory} in stock` : "Out of stock"}
+                    </Badge>
+                    <Button size="sm" variant="outline" onClick={() => navigate(`/admin/products/${product.id}/edit`)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="destructive" onClick={() => handleDeleteProduct(product.id)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-        <TabsContent value="products">
-          <Card>
-            <CardHeader>
-              <CardTitle>Product Management</CardTitle>
-              <CardDescription>Quick access to product operations</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Button className="h-20 flex flex-col gap-2">
-                  <Package className="h-6 w-6" />
-                  <span>Add Product</span>
-                </Button>
-                <Button variant="outline" className="h-20 flex flex-col gap-2">
-                  <Activity className="h-6 w-6" />
-                  <span>Manage Inventory</span>
-                </Button>
-                <Button variant="outline" className="h-20 flex flex-col gap-2">
-                  <TrendingUp className="h-6 w-6" />
-                  <span>View Analytics</span>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="alerts">
-          <Card>
-            <CardHeader>
-              <CardTitle>System Alerts</CardTitle>
-              <CardDescription>Important notifications and warnings</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {analytics.lowStockProducts.length > 0 && (
-                  <div className="flex items-center space-x-4 p-4 border border-yellow-200 rounded-lg bg-yellow-50">
-                    <AlertTriangle className="h-5 w-5 text-yellow-600" />
+      {/* Recent Orders */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Orders</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {stats.recentOrders.length === 0 ? (
+            <div className="text-center py-8">
+              <ShoppingCart className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground">No orders yet</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {stats.recentOrders.map((order: any) => (
+                <div key={order.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center space-x-4">
+                    <div className="bg-primary/10 p-2 rounded">
+                      <Package className="h-5 w-5 text-primary" />
+                    </div>
                     <div>
-                      <p className="font-medium text-yellow-800">Low Stock Alert</p>
-                      <p className="text-sm text-yellow-700">
-                        {analytics.lowStockProducts.length} products are running low on stock
+                      <p className="font-medium">Order #{order.order_number || order.id}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {order.first_name} {order.last_name} • {new Date(order.date).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
-                )}
-                <div className="flex items-center space-x-4 p-4 border border-green-200 rounded-lg bg-green-50">
-                  <CheckCircle className="h-5 w-5 text-green-600" />
-                  <div>
-                    <p className="font-medium text-green-800">System Status</p>
-                    <p className="text-sm text-green-700">All systems are running normally</p>
+                  <div className="text-right flex items-center space-x-4">
+                    <div>
+                      <p className="font-medium">Rs. {Number(order.total_amount).toFixed(2)}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {order.order_items?.length || 0} items
+                      </p>
+                    </div>
+                    <Badge variant="outline" className="capitalize">
+                      {order.status || 'pending'}
+                    </Badge>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };

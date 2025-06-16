@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -31,17 +30,18 @@ import Contact from "./pages/Contact";
 // Admin Dashboard Pages
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminProducts from "./pages/admin/Products";
+import ProductCreate from "./pages/admin/ProductCreate";
 import AdminOrders from "./pages/admin/Orders";
 import AdminCustomers from "./pages/admin/Customers";
 import AdminAnalytics from "./pages/admin/Analytics";
 import AdminBrands from "./pages/admin/Brands";
 
 // Customer Dashboard Pages
-import CustomerDashboard from "./pages/customer/CustomerDashboard";
+import CustomerDashboard from "./pages/customer/Dashboard";
 import OrderHistory from "./pages/customer/OrderHistory";
 
 // Seller Pages
-import SellerDashboard from './pages/seller/Dashboard';
+import SellerDashboard from './pages/seller/SellerDashboard';
 import CompanyRegistration from './pages/seller/CompanyRegistration';
 import AddProduct from './pages/seller/AddProduct';
 
@@ -76,6 +76,13 @@ function App() {
                 <ProtectedRoute allowedRole="admin">
                   <AdminLayout>
                     <AdminProducts />
+                  </AdminLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/products/create" element={
+                <ProtectedRoute allowedRole="admin">
+                  <AdminLayout>
+                    <ProductCreate />
                   </AdminLayout>
                 </ProtectedRoute>
               } />
